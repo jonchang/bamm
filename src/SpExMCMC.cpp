@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 #include "SpExMCMC.h"
-#include "Model.h"
+#include "SpExModel.h"
 #include "MbRandom.h"
 #include "Node.h"
 #include "Tree.h"
@@ -14,7 +14,7 @@
 #include "Log.h"
 
 
-SpExMCMC::SpExMCMC(MbRandom* ran, Model* mymodel, Settings* sp)
+SpExMCMC::SpExMCMC(MbRandom* ran, SpExModel* mymodel, Settings* sp)
 {
     ranPtr = ran;
     ModelPtr = mymodel;

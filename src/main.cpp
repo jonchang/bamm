@@ -7,7 +7,7 @@
 
 #include "Tree.h"
 #include "MbRandom.h"
-#include "Model.h"
+#include "SpExModel.h"
 #include "SpExMCMC.h"
 #include "Settings.h"
 #include "TraitMCMC.h"
@@ -97,12 +97,12 @@ int main (int argc, char* argv[])
         intree.setTreeMap(intree.getRoot());
 
         if (mySettings.getInitializeModel() && !mySettings.getRunMCMC()) {
-            Model myModel(&myRNG, &intree, &mySettings);
+            SpExModel myModel(&myRNG, &intree, &mySettings);
         } else if (mySettings.getInitializeModel() && mySettings.getAutotune()){
-            Model myModel(&myRNG, &intree, &mySettings);
+            SpExModel myModel(&myRNG, &intree, &mySettings);
             Autotune myTuneObject(&myRNG, &myModel, &mySettings);
         } else if (mySettings.getInitializeModel() && mySettings.getRunMCMC()) {
-            Model myModel(&myRNG, &intree, &mySettings);
+            SpExModel myModel(&myRNG, &intree, &mySettings);
             SpExMCMC myMCMC(&myRNG, &myModel, &mySettings);
         } else {
             log(Error) << "Unsupported option in main.\n";

@@ -7,7 +7,7 @@
 #include <iosfwd>
 
 class MbRandom;
-class Model;
+class SpExModel;
 class Settings;
 
 
@@ -16,7 +16,7 @@ class SpExMCMC
 
 public:
 
-    SpExMCMC(MbRandom* ran, Model* mymodel, Settings* sp);
+    SpExMCMC(MbRandom* ran, SpExModel* mymodel, Settings* sp);
     ~SpExMCMC();
 
     void writeStateToFile();
@@ -41,7 +41,7 @@ private:
     void exitWithErrorOutputFileExists();
 
     MbRandom* ranPtr;
-    Model*    ModelPtr;
+    SpExModel*    ModelPtr;
     Settings* sttings;
 
     std::vector<double> parWts;

@@ -1,4 +1,4 @@
-OBJS = main.o Autotune.o BranchHistory.o SpExMCMC.o BranchEvent.o Node.o Tree.o Settings.o SettingsParameter.o TraitModel.o TraitMCMC.o MbRandom.o TraitBranchHistory.o TraitBranchEvent.o Model.o Log.o
+OBJS = main.o Autotune.o BranchHistory.o SpExMCMC.o BranchEvent.o Node.o Tree.o Settings.o SettingsParameter.o TraitModel.o TraitMCMC.o MbRandom.o TraitBranchHistory.o TraitBranchEvent.o SpExModel.o Log.o
 CC = g++
 DEBUG = -g
 GIT_COMMIT_ID = $(shell git rev-parse HEAD)
@@ -11,7 +11,7 @@ bamm: $(OBJS)
 main.o: main.cpp
 	$(CC) $(CFLAGS) -DGIT_COMMIT_ID=\"$(GIT_COMMIT_ID)\" main.cpp
 
-Autotune.o: Autotune.cpp MbRandom.h Model.h TraitModel.h Settings.h
+Autotune.o: Autotune.cpp MbRandom.h SpExModel.h TraitModel.h Settings.h
 	$(CC) $(CFLAGS) Autotune.cpp
 
 Log.o: Log.cpp Log.h
@@ -53,8 +53,8 @@ TraitBranchHistory.o: TraitBranchHistory.cpp TraitBranchHistory.h TraitBranchEve
 TraitBranchEvent.o: TraitBranchEvent.cpp TraitBranchEvent.h
 	$(CC) $(CFLAGS) TraitBranchEvent.cpp
 
-Model.o: Model.cpp Model.h BranchEvent.h
-	$(CC) $(CFLAGS) Model.cpp
+SpExModel.o: SpExModel.cpp SpExModel.h BranchEvent.h
+	$(CC) $(CFLAGS) SpExModel.cpp
 
 clean:
 	rm -rf *.o bamm

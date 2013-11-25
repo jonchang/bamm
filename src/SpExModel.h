@@ -1,5 +1,5 @@
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef SP_EX_MODEL_H
+#define SP_EX_MODEL_H
 
 #include <set>
 #include <vector>
@@ -16,15 +16,15 @@ double safeExponentiation(double x);
 double proportionalShrink(double x, double scale);
 
 
-class Model
+class SpExModel
 {
 
 public:
 
     static double mhColdness;
 
-    Model(MbRandom* ranptr, Tree* tp, Settings* sp);
-    ~Model();
+    SpExModel(MbRandom* ranptr, Tree* tp, Settings* sp);
+    ~SpExModel();
 
     // Full likelihood will be lnLikTraits + lnLikBranches
     void   setCurrLnLTraits(double x);
@@ -233,120 +233,120 @@ private:
 };
 
 
-inline void Model::setCurrLnLTraits(double x)
+inline void SpExModel::setCurrLnLTraits(double x)
 {
     lnLikTraits = x;
 }
 
 
-inline double Model::getCurrLnLTraits()
+inline double SpExModel::getCurrLnLTraits()
 {
     return lnLikTraits;
 }
 
 
-inline void Model::setCurrLnLBranches(double x)
+inline void SpExModel::setCurrLnLBranches(double x)
 {
     lnLikBranches = x;
 }
 
 
-inline double Model::getCurrLnLBranches()
+inline double SpExModel::getCurrLnLBranches()
 {
     return lnLikBranches;
 }
 
 
-inline double Model::getEventRate()
+inline double SpExModel::getEventRate()
 {
     return eventLambda;
 }
 
 
-inline void Model::setEventRate(double x)
+inline void SpExModel::setEventRate(double x)
 {
     eventLambda = x;
 }
 
 
-inline void Model::incrementGeneration()
+inline void SpExModel::incrementGeneration()
 {
     gen++;
 }
 
 
-inline int Model::getGeneration()
+inline int SpExModel::getGeneration()
 {
     return gen;
 }
 
 
-inline void Model::resetGeneration()
+inline void SpExModel::resetGeneration()
 {
     gen = 0;   // to be used after TraitPreBurnin
 }
 
 
-inline int Model::getNumberOfEvents()
+inline int SpExModel::getNumberOfEvents()
 {
     return (int)eventCollection.size();
 }
 
 
-inline BranchEvent* Model::getRootEvent()
+inline BranchEvent* SpExModel::getRootEvent()
 {
     return rootEvent;
 }
 
 
-inline Tree* Model::getTreePtr()
+inline Tree* SpExModel::getTreePtr()
 {
     return treePtr;
 }
 
 
-inline int Model::getAcceptLastUpdate()
+inline int SpExModel::getAcceptLastUpdate()
 {
     return acceptLast;
 }
 
 
-inline void Model::setAcceptLastUpdate(int x)
+inline void SpExModel::setAcceptLastUpdate(int x)
 {
     acceptLast = x;
 }
 
 
-inline void Model::setPoissonRatePrior(double x)
+inline void SpExModel::setPoissonRatePrior(double x)
 {
     _poissonRatePrior  = x;
 }
 
 
-inline double Model::getPoissonRatePrior()
+inline double SpExModel::getPoissonRatePrior()
 {
     return _poissonRatePrior;
 }
 
 
 
-inline void Model::setUpdateLambdaInitScale(double x){
+inline void SpExModel::setUpdateLambdaInitScale(double x){
 	_updateLambdaInitScale = x;
 }
 
-inline void Model::setUpdateMuInitScale(double x){
+inline void SpExModel::setUpdateMuInitScale(double x){
 	_updateMuInitScale = x;
 }
 
-inline void Model::setUpdateLambdaShiftScale(double x){
+inline void SpExModel::setUpdateLambdaShiftScale(double x){
 	_updateLambdaShiftScale = x;
 }
 
-inline void Model::setMoveSizeScale(double x){
+inline void SpExModel::setMoveSizeScale(double x){
 	_scale = x;
 }
 
-inline void Model::setUpdateEventRateScale(double x){
+inline void SpExModel::setUpdateEventRateScale(double x){
 	_updateEventRateScale = x;
 }
 

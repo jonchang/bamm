@@ -1,11 +1,3 @@
-/*
- *  Model.cpp
- *  rateshift
- *
- *  Created by Dan Rabosky on 12/1/11.
- *
- */
-
 #include <iostream>
 #include <iomanip>
 #include <stdlib.h>
@@ -14,7 +6,7 @@
 #include <fstream>
 #include <limits>
 
-#include "Model.h"
+#include "SpExModel.h"
 #include "MbRandom.h"
 #include "Node.h"
 #include "Tree.h"
@@ -46,9 +38,9 @@
 #define JUMP_VARIANCE_NORMAL 0.05
 
 
-double Model::mhColdness = 1.0;
+double SpExModel::mhColdness = 1.0;
 
-Model::Model(MbRandom* ranptr, Tree* tp, Settings* sp)
+SpExModel::SpExModel(MbRandom* ranptr, Tree* tp, Settings* sp)
 {
     // reduce weird autocorrelation of values at start by calling RNG a few times...
     for (int i = 0; i < 100; i++)
@@ -165,7 +157,7 @@ Model::Model(MbRandom* ranptr, Tree* tp, Settings* sp)
 }
 
 
-Model::~Model(void)
+SpExModel::~SpExModel(void)
 {
 
     for (std::set<BranchEvent*>::iterator it = eventCollection.begin();
@@ -174,7 +166,7 @@ Model::~Model(void)
 }
 
 
-void Model::initializeModelFromEventDataFile(void)
+void SpExModel::initializeModelFromEventDataFile(void)
 {
 
 
@@ -277,7 +269,7 @@ void Model::initializeModelFromEventDataFile(void)
             //std::cout << newEvent->getAbsoluteTime() << "\t" << newEvent->getLamInit() << "\t" << newEvent->getLamShift() << "\t" << newEvent->getMuInit() << std::endl;
 
         } else {
-            std::cout << "Error in Model::initializeModelFromEventDataFile" << std::endl;
+            std::cout << "Error in SpExModel::initializeModelFromEventDataFile" << std::endl;
             exit(1);
         }
 
@@ -298,13 +290,13 @@ void Model::initializeModelFromEventDataFile(void)
 /*
     Adds event to tree based on reference map value
     -adds to branch history set
-    -inserts into Model::eventCollection
+    -inserts into SpExModel::eventCollection
 
 
 
  */
 
-void Model::addEventToTree(double x)
+void SpExModel::addEventToTree(double x)
 {
 
 #ifdef ADAPTIVE_MCMC_PROPOSAL
@@ -394,14 +386,14 @@ void Model::addEventToTree(double x)
 /*
  Adds event to tree based on uniform RV
  -adds to branch history set
- -inserts into Model::eventCollection
+ -inserts into SpExModel::eventCollection
 
 
 
  */
 
 
-void Model::addEventToTree(void)
+void SpExModel::addEventToTree(void)
 {
 
     double aa = treePtr->getRoot()->getMapStart();
@@ -489,7 +481,7 @@ void Model::addEventToTree(void)
 
 }
 
-void Model::printEvents(void)
+void SpExModel::printEvents(void)
 {
 
     // for each event:
@@ -507,7 +499,7 @@ void Model::printEvents(void)
 
 }
 
-BranchEvent* Model::chooseEventAtRandom(void)
+BranchEvent* SpExModel::chooseEventAtRandom(void)
 {
 
     int n_events = (int)eventCollection.size();
@@ -537,7 +529,7 @@ BranchEvent* Model::chooseEventAtRandom(void)
 
 
 /*
- void Model::eventLocalMove(void)
+ void SpExModel::eventLocalMove(void)
 
  IF events are on tree:
  choose event at random
@@ -546,7 +538,7 @@ BranchEvent* Model::chooseEventAtRandom(void)
 
  */
 
-void Model::eventLocalMove(void)
+void SpExModel::eventLocalMove(void)
 {
 
 
@@ -590,7 +582,7 @@ void Model::eventLocalMove(void)
 
 }
 
-void Model::eventGlobalMove(void)
+void SpExModel::eventGlobalMove(void)
 {
 
     if (getNumberOfEvents() > 0) {
@@ -628,7 +620,7 @@ void Model::eventGlobalMove(void)
 
 // used to reset position of event if move is rejected
 
-void Model::revertMovedEventToPrevious(void)
+void SpExModel::revertMovedEventToPrevious(void)
 {
 
     // Get LAST EVENT from position of event to be removed:
@@ -677,7 +669,7 @@ void Model::revertMovedEventToPrevious(void)
 
 
 // Recursively count the number of events in the branch histories
-int Model::countEventsInBranchHistory(Node* p)
+int SpExModel::countEventsInBranchHistory(Node* p)
 {
     int count = 0;
     count += p->getBranchHistory()->getNumberOfBranchEvents();
@@ -695,7 +687,7 @@ int Model::countEventsInBranchHistory(Node* p)
 
 */
 
-void Model::deleteEventFromTree(BranchEvent* be)
+void SpExModel::deleteEventFromTree(BranchEvent* be)
 {
 
     if (be == rootEvent) {
@@ -746,7 +738,7 @@ void Model::deleteEventFromTree(BranchEvent* be)
 
 
 
-void Model::deleteRandomEventFromTree(void)
+void SpExModel::deleteRandomEventFromTree(void)
 {
 
     //std::cout << std::endl << std::endl << "START Delete: " << std::endl;
@@ -842,7 +834,7 @@ void Model::deleteRandomEventFromTree(void)
 }
 
 
-void Model::restoreLastDeletedEvent(void)
+void SpExModel::restoreLastDeletedEvent(void)
 {
 
 
@@ -877,7 +869,7 @@ void Model::restoreLastDeletedEvent(void)
 
 
 
-void Model::changeNumberOfEventsMH(void)
+void SpExModel::changeNumberOfEventsMH(void)
 {
 
 
@@ -1092,7 +1084,7 @@ void Model::changeNumberOfEventsMH(void)
 
 }
 
-void Model::moveEventMH(void)
+void SpExModel::moveEventMH(void)
 {
 
 
@@ -1228,7 +1220,7 @@ void Model::moveEventMH(void)
 
 
 
-void Model::updateLambdaInitMH(void)
+void SpExModel::updateLambdaInitMH(void)
 {
 
     //int n_events = eventCollection.size() + 1;
@@ -1297,7 +1289,7 @@ void Model::updateLambdaInitMH(void)
 
 }
 
-void Model::updateLambdaShiftMH(void)
+void SpExModel::updateLambdaShiftMH(void)
 {
 
     //int n_events = eventCollection.size() + 1;
@@ -1379,7 +1371,7 @@ void Model::updateLambdaShiftMH(void)
         flip state to time-constant
 
  */
-void Model::updateTimeVariablePartitionsMH(void)
+void SpExModel::updateTimeVariablePartitionsMH(void)
 {
 
     //int n_events = eventCollection.size() + 1;
@@ -1407,7 +1399,7 @@ void Model::updateTimeVariablePartitionsMH(void)
 
     } else {
         // Should not be able to get here:
-        std::cout << "Invalid _isEventTimeVariable in Model::UpdateTimeVariablePartitionsMH"
+        std::cout << "Invalid _isEventTimeVariable in SpExModel::UpdateTimeVariablePartitionsMH"
              << std::endl;
         throw;
     }
@@ -1416,7 +1408,7 @@ void Model::updateTimeVariablePartitionsMH(void)
 }
 
 
-void Model::updateMuInitMH(void)
+void SpExModel::updateMuInitMH(void)
 {
 
     //int n_events = eventCollection.size() + 1;
@@ -1488,7 +1480,7 @@ void Model::updateMuInitMH(void)
 }
 
 
-void Model::updateMuShiftMH(void)
+void SpExModel::updateMuShiftMH(void)
 {
 
     //int n_events = eventCollection.size() + 1;
@@ -1576,7 +1568,7 @@ void Model::updateMuShiftMH(void)
  so the priors and qratio determine acceptance rate.
 
  */
-void Model::updateEventRateMH(void)
+void SpExModel::updateEventRateMH(void)
 {
 
 
@@ -1616,14 +1608,14 @@ void Model::updateEventRateMH(void)
 }
 
 
-double Model::computeLikelihoodBranches(void)
+double SpExModel::computeLikelihoodBranches(void)
 {
 
     return computeLikelihoodBranchesByInterval();
 }
 
 
-double Model::computeLikelihoodBranchesByInterval(void)
+double SpExModel::computeLikelihoodBranchesByInterval(void)
 {
 
 
@@ -1842,7 +1834,7 @@ double Model::computeLikelihoodBranchesByInterval(void)
 /* Only works on speciation + extinction
  */
 
-double Model::computeLogPrior(void)
+double SpExModel::computeLogPrior(void)
 {
 
 
@@ -1913,16 +1905,16 @@ double Model::computeLogPrior(void)
 
 
 
-bool Model::acceptMetropolisHastings(const double lnR)
+bool SpExModel::acceptMetropolisHastings(const double lnR)
 {
-    const double r = safeExponentiation(Model::mhColdness * lnR);
+    const double r = safeExponentiation(SpExModel::mhColdness * lnR);
     return (ran->uniformRv() < r);
 }
 
 
 
 
-void Model::initializeBranchHistories(Node* x)
+void SpExModel::initializeBranchHistories(Node* x)
 {
     //std::cout << x << std::endl;
     x->getBranchHistory()->setNodeEvent(rootEvent);
@@ -1940,7 +1932,7 @@ void Model::initializeBranchHistories(Node* x)
 
 
 
-void Model::printStartAndEndEventStatesForBranch(Node* x)
+void SpExModel::printStartAndEndEventStatesForBranch(Node* x)
 {
 
     if (x != treePtr->getRoot())
@@ -1968,7 +1960,7 @@ void Model::printStartAndEndEventStatesForBranch(Node* x)
 
  */
 
-void Model::forwardSetBranchHistories(BranchEvent* x)
+void SpExModel::forwardSetBranchHistories(BranchEvent* x)
 {
     // If there is another event occurring more recent (closer to tips)
     //  do nothing. Even just sits in BranchHistory but doesn't affect
@@ -2014,7 +2006,7 @@ void Model::forwardSetBranchHistories(BranchEvent* x)
 }
 
 
-void Model::forwardSetHistoriesRecursive(Node* p)
+void SpExModel::forwardSetHistoriesRecursive(Node* p)
 {
 
     // Get event that characterizes parent node
@@ -2037,7 +2029,7 @@ void Model::forwardSetHistoriesRecursive(Node* p)
 
 
 
-void Model::printBranchHistories(Node* x)
+void SpExModel::printBranchHistories(Node* x)
 {
 
     if (x != treePtr->getRoot()) {
@@ -2059,7 +2051,7 @@ void Model::printBranchHistories(Node* x)
 
 
 
-double  Model::getMHacceptanceRate(void)
+double  SpExModel::getMHacceptanceRate(void)
 {
 
     double arate = (double)acceptCount / ((double)acceptCount +
@@ -2070,7 +2062,7 @@ double  Model::getMHacceptanceRate(void)
 }
 
 
-void  Model::resetMHacceptanceParameters(void)
+void  SpExModel::resetMHacceptanceParameters(void)
 {
     acceptCount = 0;
     rejectCount = 0;
@@ -2079,7 +2071,7 @@ void  Model::resetMHacceptanceParameters(void)
 
 
 
-BranchEvent* Model::getEventByIndex(int x)
+BranchEvent* SpExModel::getEventByIndex(int x)
 {
 
     //int ctr = 0;
@@ -2094,7 +2086,7 @@ BranchEvent* Model::getEventByIndex(int x)
 // adding log contrasts here.
 
 
-void Model::printExtinctionParams(void)
+void SpExModel::printExtinctionParams(void)
 {
 
     if (eventCollection.size() > 0) {
@@ -2111,12 +2103,12 @@ void Model::printExtinctionParams(void)
 
 
 /*
- Model::countTimeVaryingRatePartitions
+ SpExModel::countTimeVaryingRatePartitions
 
     -counts number of time-varying rate partitions
 
  */
-int Model::countTimeVaryingRatePartitions(void)
+int SpExModel::countTimeVaryingRatePartitions(void)
 {
 
     int count = 0;
@@ -2135,7 +2127,7 @@ int Model::countTimeVaryingRatePartitions(void)
 
  */
 
-void Model::getEventDataString(std::stringstream& ss)
+void SpExModel::getEventDataString(std::stringstream& ss)
 {
 
     ss << getGeneration() << ",";
@@ -2177,7 +2169,7 @@ void Model::getEventDataString(std::stringstream& ss)
 }
 
 
-bool Model::isEventConfigurationValid(BranchEvent* be)
+bool SpExModel::isEventConfigurationValid(BranchEvent* be)
 {
     //std::cout << "enter isEventConfigValid" << std::endl;
     bool isValidConfig = false;
@@ -2224,7 +2216,7 @@ bool Model::isEventConfigurationValid(BranchEvent* be)
         else if (badsum < 3)
             isValidConfig = true;
         else {
-            std::cout << "problem in Model::isEventConfigurationValid" << std::endl;
+            std::cout << "problem in SpExModel::isEventConfigurationValid" << std::endl;
             exit(1);
         }
 
@@ -2252,7 +2244,7 @@ double safeExponentiation(double x)
 }
 
 
-void Model::debugLHcalculation(void)
+void SpExModel::debugLHcalculation(void)
 {
     std::cout << "This does not currently support anything" << std::endl;
 
