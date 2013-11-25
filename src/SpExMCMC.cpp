@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <cstdlib>
 
-#include "MCMC.h"
+#include "SpExMCMC.h"
 #include "Model.h"
 #include "MbRandom.h"
 #include "Node.h"
@@ -14,7 +14,7 @@
 #include "Log.h"
 
 
-MCMC::MCMC(MbRandom* ran, Model* mymodel, Settings* sp)
+SpExMCMC::SpExMCMC(MbRandom* ran, Model* mymodel, Settings* sp)
 {
     ranPtr = ran;
     ModelPtr = mymodel;
@@ -100,7 +100,7 @@ MCMC::MCMC(MbRandom* ran, Model* mymodel, Settings* sp)
 }
 
 
-MCMC::~MCMC(void)
+SpExMCMC::~SpExMCMC(void)
 {
     _mcmcOutStream.close();
     _eventDataOutStream.close();
@@ -112,7 +112,7 @@ MCMC::~MCMC(void)
 }
 
 
-void MCMC::setUpdateWeights(void)
+void SpExMCMC::setUpdateWeights(void)
 {
     parWts.push_back(sttings->getUpdateRateEventNumber()); // event number
     parWts.push_back(sttings->getUpdateRateEventPosition()); // event position
@@ -143,7 +143,7 @@ void MCMC::setUpdateWeights(void)
 }
 
 
-int MCMC::pickParameterClassToUpdate(void)
+int SpExMCMC::pickParameterClassToUpdate(void)
 {
     double rn = ranPtr->uniformRv();
     int parm = 0;
@@ -157,7 +157,7 @@ int MCMC::pickParameterClassToUpdate(void)
 }
 
 
-void MCMC::updateState(int parm)
+void SpExMCMC::updateState(int parm)
 {
     if (parm == 0) {
         ModelPtr->changeNumberOfEventsMH();
@@ -198,13 +198,13 @@ void MCMC::updateState(int parm)
 }
 
 
-void MCMC::writeStateToFile()
+void SpExMCMC::writeStateToFile()
 {
     writeStateToStream(_mcmcOutStream);
 }
 
 
-void MCMC::writeStateToStream(std::ostream& outStream)
+void SpExMCMC::writeStateToStream(std::ostream& outStream)
 {
     outStream << ModelPtr->getGeneration()       << ","
               << ModelPtr->getNumberOfEvents()   << ","
@@ -222,7 +222,7 @@ void MCMC::writeStateToStream(std::ostream& outStream)
 
 
 */
-void MCMC::printStateData(void)
+void SpExMCMC::printStateData(void)
 {
     log() << std::setw(15) << ModelPtr->getGeneration()
           << std::setw(15) << ModelPtr->getCurrLnLBranches()
@@ -234,7 +234,7 @@ void MCMC::printStateData(void)
 
 ////////
 
-void MCMC::writeBranchSpeciationRatesToFile(void)
+void SpExMCMC::writeBranchSpeciationRatesToFile(void)
 {
     ModelPtr->getTreePtr()->setMeanBranchSpeciation();
     std::stringstream outdata;
@@ -246,7 +246,7 @@ void MCMC::writeBranchSpeciationRatesToFile(void)
 }
 
 
-void MCMC::writeBranchExtinctionRatesToFile(void)
+void SpExMCMC::writeBranchExtinctionRatesToFile(void)
 {
     ModelPtr->getTreePtr()->setMeanBranchExtinction();
     std::stringstream outdata;
@@ -258,7 +258,7 @@ void MCMC::writeBranchExtinctionRatesToFile(void)
 }
 
 
-void MCMC::writeEventDataToFile(void)
+void SpExMCMC::writeEventDataToFile(void)
 {
     std::stringstream eventData;
     ModelPtr->getEventDataString(eventData);
@@ -267,7 +267,7 @@ void MCMC::writeEventDataToFile(void)
 }
 
 
-void MCMC::writeHeadersToOutputFiles()
+void SpExMCMC::writeHeadersToOutputFiles()
 {
     _mcmcOutStream << "generation,N_shifts,logPrior,logLik," <<
         "eventRate,acceptRate\n";

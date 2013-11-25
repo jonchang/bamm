@@ -8,7 +8,7 @@
 #include "Tree.h"
 #include "MbRandom.h"
 #include "Model.h"
-#include "MCMC.h"
+#include "SpExMCMC.h"
 #include "Settings.h"
 #include "TraitMCMC.h"
 #include "TraitModel.h"
@@ -103,7 +103,7 @@ int main (int argc, char* argv[])
             Autotune myTuneObject(&myRNG, &myModel, &mySettings);
         } else if (mySettings.getInitializeModel() && mySettings.getRunMCMC()) {
             Model myModel(&myRNG, &intree, &mySettings);
-            MCMC myMCMC(&myRNG, &myModel, &mySettings);
+            SpExMCMC myMCMC(&myRNG, &myModel, &mySettings);
         } else {
             log(Error) << "Unsupported option in main.\n";
             std::exit(1);

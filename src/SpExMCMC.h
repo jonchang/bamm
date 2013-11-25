@@ -1,13 +1,5 @@
-/*
- *  MCMC.h
- *  rateshift
- *
- *  Created by Dan Rabosky on 12/2/11.
- *
- */
-
-#ifndef MCMC_H
-#define MCMC_H
+#ifndef SP_EX_MCMC_H
+#define SP_EX_MCMC_H
 
 #include <stdlib.h>
 #include <string>
@@ -19,13 +11,13 @@ class Model;
 class Settings;
 
 
-class MCMC
+class SpExMCMC
 {
 
 public:
 
-    MCMC(MbRandom* ran, Model* mymodel, Settings* sp);
-    ~MCMC();
+    SpExMCMC(MbRandom* ran, Model* mymodel, Settings* sp);
+    ~SpExMCMC();
 
     void writeStateToFile();
     void printStateData();

@@ -1,4 +1,4 @@
-OBJS = main.o Autotune.o BranchHistory.o MCMC.o BranchEvent.o Node.o Tree.o Settings.o SettingsParameter.o TraitModel.o TraitMCMC.o MbRandom.o TraitBranchHistory.o TraitBranchEvent.o Model.o Log.o
+OBJS = main.o Autotune.o BranchHistory.o SpExMCMC.o BranchEvent.o Node.o Tree.o Settings.o SettingsParameter.o TraitModel.o TraitMCMC.o MbRandom.o TraitBranchHistory.o TraitBranchEvent.o Model.o Log.o
 CC = g++
 DEBUG = -g
 GIT_COMMIT_ID = $(shell git rev-parse HEAD)
@@ -20,8 +20,8 @@ Log.o: Log.cpp Log.h
 BranchHistory.o: BranchHistory.cpp BranchHistory.h BranchEvent.h
 	$(CC) $(CFLAGS) BranchHistory.cpp
 
-MCMC.o: MCMC.cpp MCMC.h
-	$(CC) $(CFLAGS) MCMC.cpp
+SpExMCMC.o: SpExMCMC.cpp SpExMCMC.h
+	$(CC) $(CFLAGS) SpExMCMC.cpp
 
 BranchEvent.o: BranchEvent.cpp BranchEvent.h
 	$(CC) $(CFLAGS) BranchEvent.cpp
