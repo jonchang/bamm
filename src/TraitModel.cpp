@@ -23,7 +23,7 @@
 #include "MbRandom.h"
 #include "Node.h"
 #include "Tree.h"
-#include "TraitBranchHistory.h"
+#include "BranchHistory.h"
 #include "Settings.h"
 #include "Log.h"
 

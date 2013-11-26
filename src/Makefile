@@ -1,4 +1,4 @@
-OBJS = main.o Autotune.o BranchHistory.o SpExMCMC.o BranchEvent.o Node.o Tree.o Settings.o SettingsParameter.o TraitModel.o TraitMCMC.o MbRandom.o TraitBranchHistory.o TraitBranchEvent.o SpExModel.o Log.o
+OBJS = main.o Autotune.o SpExMCMC.o SpExBranchEvent.o Node.o Tree.o Settings.o SettingsParameter.o TraitModel.o TraitMCMC.o MbRandom.o TraitBranchEvent.o SpExModel.o Log.o
 CC = g++
 DEBUG = -g
 GIT_COMMIT_ID = $(shell git rev-parse HEAD)
@@ -17,14 +17,11 @@ Autotune.o: Autotune.cpp MbRandom.h SpExModel.h TraitModel.h Settings.h
 Log.o: Log.cpp Log.h
 	$(CC) $(CFLAGS) Log.cpp
 	
-BranchHistory.o: BranchHistory.cpp BranchHistory.h BranchEvent.h
-	$(CC) $(CFLAGS) BranchHistory.cpp
-
 SpExMCMC.o: SpExMCMC.cpp SpExMCMC.h
 	$(CC) $(CFLAGS) SpExMCMC.cpp
 
-BranchEvent.o: BranchEvent.cpp BranchEvent.h
-	$(CC) $(CFLAGS) BranchEvent.cpp
+SpExBranchEvent.o: SpExBranchEvent.cpp SpExBranchEvent.h
+	$(CC) $(CFLAGS) SpExBranchEvent.cpp
 
 Node.o: Node.cpp Node.h
 	$(CC) $(CFLAGS) Node.cpp
@@ -47,13 +44,10 @@ TraitMCMC.o: TraitMCMC.cpp TraitMCMC.h
 MbRandom.o: MbRandom.cpp MbRandom.h
 	$(CC) $(CFLAGS) MbRandom.cpp
 
-TraitBranchHistory.o: TraitBranchHistory.cpp TraitBranchHistory.h TraitBranchEvent.h
-	$(CC) $(CFLAGS) TraitBranchHistory.cpp
-
 TraitBranchEvent.o: TraitBranchEvent.cpp TraitBranchEvent.h
 	$(CC) $(CFLAGS) TraitBranchEvent.cpp
 
-SpExModel.o: SpExModel.cpp SpExModel.h BranchEvent.h
+SpExModel.o: SpExModel.cpp SpExModel.h SpExBranchEvent.h
 	$(CC) $(CFLAGS) SpExModel.cpp
 
 clean:

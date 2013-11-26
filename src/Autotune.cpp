@@ -12,8 +12,6 @@
 #include "Node.h"
 #include "Tree.h"
 #include "Settings.h"
-#include "BranchEvent.h"
-#include "TraitBranchEvent.h"
 
 Autotune::Autotune(MbRandom* ran, SpExModel * mymodel, Settings*sp)
 {

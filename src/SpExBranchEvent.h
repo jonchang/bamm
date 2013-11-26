@@ -1,45 +1,36 @@
-/*
- *  BranchEvent.h
- *  rateshift
- *
- *  Created by Dan Rabosky on 12/5/11.
+#ifndef SP_EX_BRANCH_EVENT_H
+#define SP_EX_BRANCH_EVENT_H
 
 
- // Major update no more phenotypic evolution
- // March 25 2012
-
- */
-
-#ifndef BRANCHEVENT_H
-#define BRANCHEVENT_H
-
-
-//Forward declarations:
+// Forward declarations:
 class Tree;
 class Node;
-class TraitBranchEvent;
 class MbRandom;
 
 
-// Class TraitBranchEventPtrCompare is defined at the end
-
-
 /*
+class SpExBranchEvent contains:
+    (1) the node associated with the event
+    (2) the map position of the event
+    (3) parameters associated with the event, e.g., lambda
 
- class BranchEvent is the actual event.
- It contains:
-  (1) the node associated with the event
-  (2) the map position of the event
-  (3) parameters associated with the event
-    e.g., lambda
-The initial event will always be the root node
- with a map position of 0.
+The initial event will always be the root node with a map position of 0.
 This event is immutable.
+*/
 
- */
-
-class BranchEvent
+class SpExBranchEvent
 {
+
+public:
+
+    class PtrCompare
+    {
+    public:
+        bool operator()(const SpExBranchEvent* m1,
+                        const SpExBranchEvent* m2) const {
+            return *m1 < *m2;
+        }
+    };
 
 private:
 
@@ -70,10 +61,10 @@ private:
 public:
 
     // constructors, depending on whether you want trait rate or lambda/mu
-    BranchEvent(double speciation, double lamshift, double extinction,
+    SpExBranchEvent(double speciation, double lamshift, double extinction,
         double mushift, Node* x, Tree* tp, MbRandom*rp, double map);
 
-    ~BranchEvent();
+    ~SpExBranchEvent();
 
     void   setMapTime(double x);
     double getMapTime();
@@ -114,7 +105,7 @@ public:
     void revertOldMapPosition();
 
     // Overloading comparision operator:
-    bool operator<(const BranchEvent& a) const;
+    bool operator<(const SpExBranchEvent& a) const;
 
     // For time-varying rjMCMC:
     void setIsEventTimeVariable(bool x);
@@ -122,137 +113,123 @@ public:
 };
 
 
-inline void BranchEvent::setMapTime(double x)
+inline void SpExBranchEvent::setMapTime(double x)
 {
     mapTime = x;
 }
 
 
-inline double BranchEvent::getMapTime()
+inline double SpExBranchEvent::getMapTime()
 {
     return mapTime;
 }
 
 
-inline void BranchEvent::setEventNode(Node* x)
+inline void SpExBranchEvent::setEventNode(Node* x)
 {
     nodeptr = x;
 }
 
 
-inline Node* BranchEvent::getEventNode()
+inline Node* SpExBranchEvent::getEventNode()
 {
     return nodeptr;
 }
 
 
-inline void BranchEvent::setAbsoluteTime(double x)
+inline void SpExBranchEvent::setAbsoluteTime(double x)
 {
     _absTime = x;
 }
 
 
-inline double BranchEvent::getAbsoluteTime()
+inline double SpExBranchEvent::getAbsoluteTime()
 {
     return _absTime;
 }
 
 
-inline void BranchEvent::setLamInit(double x)
+inline void SpExBranchEvent::setLamInit(double x)
 {
     _lamInit = x;
 }
 
 
-inline double BranchEvent::getLamInit()
+inline double SpExBranchEvent::getLamInit()
 {
     return _lamInit;
 }
 
 
-inline void BranchEvent::setMuInit(double x)
+inline void SpExBranchEvent::setMuInit(double x)
 {
     _muInit = x;
 }
 
 
-inline double BranchEvent::getMuInit()
+inline double SpExBranchEvent::getMuInit()
 {
     return _muInit;
 }
 
 
-inline void BranchEvent::setLamShift(double x)
+inline void SpExBranchEvent::setLamShift(double x)
 {
     _lamShift = x;
 }
 
 
-inline double BranchEvent::getLamShift()
+inline double SpExBranchEvent::getLamShift()
 {
     return _lamShift;
 }
 
 
-inline void BranchEvent::setMuShift(double x)
+inline void SpExBranchEvent::setMuShift(double x)
 {
     _muShift = x;
 }
 
 
-inline double BranchEvent::getMuShift()
+inline double SpExBranchEvent::getMuShift()
 {
     return _muShift;
 }
 
 
-inline void BranchEvent::setOldEventNode(Node* x)
+inline void SpExBranchEvent::setOldEventNode(Node* x)
 {
     oldNodePtr = x;
 }
 
 
-inline Node* BranchEvent::getOldEventNode()
+inline Node* SpExBranchEvent::getOldEventNode()
 {
     return oldNodePtr;
 }
 
 
-inline void BranchEvent::setOldMapTime(double x)
+inline void SpExBranchEvent::setOldMapTime(double x)
 {
     oldMapTime = x;
 }
 
 
-inline double BranchEvent::getOldMapTime()
+inline double SpExBranchEvent::getOldMapTime()
 {
     return oldMapTime;
 }
 
 
-inline bool BranchEvent::getIsEventTimeVariable()
+inline bool SpExBranchEvent::getIsEventTimeVariable()
 {
     return _isEventTimeVariable;
 }
 
 
-inline void BranchEvent::setIsEventTimeVariable(bool x)
+inline void SpExBranchEvent::setIsEventTimeVariable(bool x)
 {
     _isEventTimeVariable = x;
-}
-
-
-class BranchEventPtrCompare
-{
-public:
-    bool operator()(const BranchEvent* m1, const BranchEvent* m2) const;
-};
-
-
-inline bool BranchEventPtrCompare::operator()
-    (const BranchEvent* m1, const BranchEvent* m2) const
-{
-    return *m1 < *m2;
 }
 
 

@@ -5,17 +5,17 @@
 #include <set>
 #include <vector>
 
+#include "BranchHistory.h"
+
 class MbRandom;
-class branchEvent;
-class eventSet;
-class Phenotype;
-class BranchHistory;
-class TraitBranchHistory;
 class Node;
+class TraitBranchEvent;
 
 
 class Tree
 {
+
+    typedef BranchHistory<TraitBranchEvent> TraitBranchHistory;
 
 private:
 
@@ -42,10 +42,6 @@ private:
 
     // This is the total treelength: also used in mapping events to tree
     double treelength;
-
-    // This is a pointer to an object that stores
-    // all events that happened.
-    eventSet* treeEvents; // What is this doing???
 
     // New data for mapping events to nodes:
     // Nodes subtended by a branch that can hold an event

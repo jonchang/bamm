@@ -7,8 +7,7 @@
 
 #include "Node.h"
 #include "BranchHistory.h"
-#include "TraitBranchHistory.h"
-//#include "MbRandom.h"
+#include "SpExBranchEvent.h"
 
 
 Node::Node(void)
@@ -31,7 +30,7 @@ Node::Node(void)
     _branchTime = 0.0;
     _cladeName = "";
 
-    BranchHistory* bh = new BranchHistory();
+    SpExBranchHistory* bh = new SpExBranchHistory();
     TraitBranchHistory* tbh = new TraitBranchHistory();
 
     history = bh;
@@ -79,7 +78,7 @@ Node::Node(int x)
     _branchTime = 0.0;
     _cladeName = "";
 
-    BranchHistory* bh = new BranchHistory();
+    SpExBranchHistory* bh = new SpExBranchHistory();
     history = bh;
 
     TraitBranchHistory* tbh = new TraitBranchHistory();
@@ -163,7 +162,7 @@ Node* Node::getRandomRightTipNode(void)
 void Node::computeNodeBranchSpeciationParams(void)
 {
 
-    BranchHistory* bh = getBranchHistory();
+    SpExBranchHistory* bh = getBranchHistory();
 
     if (getAnc() != NULL) {
         // Only compute mean branch rate if node is NOT the root
@@ -302,7 +301,7 @@ void Node::computeNodeBranchSpeciationParams(void)
 void Node::computeNodeBranchExtinctionParams(void)
 {
 
-    BranchHistory* bh = getBranchHistory();
+    SpExBranchHistory* bh = getBranchHistory();
 
     if (getAnc() != NULL) {
         // Only compute mean branch rate if node is NOT the root
@@ -421,7 +420,7 @@ void Node::computeNodeBranchExtinctionParams(void)
 double Node::getPointExtinction(double branchtime)
 {
 
-    BranchHistory* bh = getBranchHistory();
+    SpExBranchHistory* bh = getBranchHistory();
     double abstime = getTime() + getBrlen() - branchtime;
     double reltime = 0.0;
     double curMu = 0.0;
@@ -431,9 +430,9 @@ double Node::getPointExtinction(double branchtime)
                 bh->getNodeEvent()->getMuShift()));
     } else {
         //multi-event scenario
-        BranchEvent* lastEvent = bh->getAncestralNodeEvent();
+        SpExBranchEvent* lastEvent = bh->getAncestralNodeEvent();
         for (int i = 0; i < bh->getNumberOfBranchEvents(); i++) {
-            BranchEvent* temp_be = bh->getEventByIndexPosition(i);
+            SpExBranchEvent* temp_be = bh->getEventByIndexPosition(i);
             if (temp_be->getAbsoluteTime() > abstime )
                 break;
             lastEvent = bh->getEventByIndexPosition(i);
@@ -469,7 +468,7 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
              << std::endl;
         throw;
     }
-    BranchHistory* bh = getBranchHistory();
+    SpExBranchHistory* bh = getBranchHistory();
 
     double rate = 0.0;
     //std::cout << "at start: tstart: " << tstart << "\ttstop: " << tstop << std::endl;
@@ -514,7 +513,7 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
         double tcheck = 0.0;
         double tabs1 = tstart;
         // get next event from t1:
-        BranchEvent* be = bh->getLastEvent(tabs1);
+        SpExBranchEvent* be = bh->getLastEvent(tabs1);
         double tabs2 = bh->getNextEvent(tabs1)->getAbsoluteTime();
 
         tcheck += (tabs2 - tabs1);
@@ -595,7 +594,7 @@ double Node::computeSpeciationRateIntervalAbsoluteTime(double tstart,
         throw;
     }
 
-    BranchHistory* bh = getBranchHistory();
+    SpExBranchHistory* bh = getBranchHistory();
 
     double rate = 0.0;
     //std::cout << "at start: tstart: " << tstart << "\ttstop: " << tstop << std::endl;
@@ -640,7 +639,7 @@ double Node::computeSpeciationRateIntervalAbsoluteTime(double tstart,
         double tcheck = 0.0;
         double tabs1 = tstart;
         // get next event from t1:
-        BranchEvent* be = bh->getLastEvent(tabs1);
+        SpExBranchEvent* be = bh->getLastEvent(tabs1);
         double tabs2 = bh->getNextEvent(tabs1)->getAbsoluteTime();
 
         tcheck += (tabs2 - tabs1);
@@ -713,7 +712,7 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
              << std::endl;
         throw;
     }
-    BranchHistory* bh = getBranchHistory();
+    SpExBranchHistory* bh = getBranchHistory();
 
     double rate = 0.0;
 
@@ -752,7 +751,7 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
         double tcheck = 0.0;
         double tabs1 = tstart;
         // get next event from t1:
-        BranchEvent* be = bh->getLastEvent(tabs1);
+        SpExBranchEvent* be = bh->getLastEvent(tabs1);
         double tabs2 = bh->getNextEvent(tabs1)->getAbsoluteTime();
 
         tcheck += (tabs2 - tabs1);

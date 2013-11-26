@@ -9,7 +9,6 @@
 #include "Tree.h"
 #include "Node.h"
 #include "BranchHistory.h"
-#include "TraitBranchHistory.h"
 #include "MbRandom.h"
 #include "Log.h"
 

@@ -1,28 +1,21 @@
-/*
- *  BranchEvent.cpp
- *  rateshift
- *
- *  Created by Dan Rabosky on 12/5/11.
-  *
- */
 #include <iostream>
 #include <stdlib.h>
 
-#include "BranchEvent.h"
+#include "SpExBranchEvent.h"
 #include "Node.h"
 #include "Tree.h"
 #include "MbRandom.h"
 
 
 /*
-    Note that BranchEvent now inherits shift parameter
+    Note that SpExBranchEvent inherits shift parameter,
     thus addition of event need not change likelihood of tree.
+*/
 
- */
 
-
-BranchEvent::BranchEvent(double speciation, double lamshift, double extinction,
-                         double mushift, Node* x, Tree* tp,  MbRandom* rp, double map)
+SpExBranchEvent::SpExBranchEvent(double speciation, double lamshift,
+    double extinction, double mushift, Node* x, Tree* tp,
+    MbRandom* rp, double map)
 {
     // Speciation and extinction from new event assumed constant in time...
 
@@ -53,14 +46,14 @@ BranchEvent::BranchEvent(double speciation, double lamshift, double extinction,
 }
 
 
-BranchEvent::~BranchEvent(void)
+SpExBranchEvent::~SpExBranchEvent(void)
 {
 
 
 }
 
 /*
- bool BranchEvent::operator<(const BranchEvent& a) const
+ bool SpExBranchEvent::operator<(const BranchEvent& a) const
  Modified on 9.17.2012.
  if maptime is > than a.maptime
  THEN event must have occurred earlier than a.maptime event
@@ -69,7 +62,7 @@ BranchEvent::~BranchEvent(void)
 
  */
 
-bool BranchEvent::operator<(const BranchEvent& a) const
+bool SpExBranchEvent::operator<(const SpExBranchEvent& a) const
 {
 
     if ( mapTime > a.mapTime ) {
@@ -102,7 +95,7 @@ bool BranchEvent::operator<(const BranchEvent& a) const
 */
 
 
-void BranchEvent::moveEventLocal(double stepsize)
+void SpExBranchEvent::moveEventLocal(double stepsize)
 {
 
     oldNodePtr = nodeptr;
@@ -116,7 +109,7 @@ void BranchEvent::moveEventLocal(double stepsize)
 
 }
 
-void BranchEvent::incrementMapPosition(double ink)
+void SpExBranchEvent::incrementMapPosition(double ink)
 {
     double mapstart = nodeptr->getMapStart();
     double mapend = nodeptr->getMapEnd();
@@ -225,7 +218,7 @@ void BranchEvent::incrementMapPosition(double ink)
 
 }
 
-void BranchEvent::moveEventGlobal(void)
+void SpExBranchEvent::moveEventGlobal(void)
 {
 
     oldNodePtr = nodeptr;
@@ -242,14 +235,14 @@ void BranchEvent::moveEventGlobal(void)
 
 
 // test
-void BranchEvent::setEventByMapPosition(double x)
+void SpExBranchEvent::setEventByMapPosition(double x)
 {
     setEventNode(treePtr->mapEventToTree(x));
     setMapTime(x);
     setAbsoluteTime(treePtr->getAbsoluteTimeFromMapTime(getMapTime()));
 }
 
-void BranchEvent::revertOldMapPosition(void)
+void SpExBranchEvent::revertOldMapPosition(void)
 {
 
     nodeptr = oldNodePtr;

@@ -10,7 +10,7 @@
 #include "Node.h"
 #include "Tree.h"
 #include "Settings.h"
-#include "BranchEvent.h"
+#include "SpExBranchEvent.h"
 #include "Log.h"
 
 

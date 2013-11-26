@@ -15,9 +15,6 @@ class Node;
 class MbRandom;
 
 
-// Class TraitBranchEventPtrCompare is defined at the end
-
-
 /*
 
  class TraitBranchEvent is the actual event.
@@ -34,6 +31,17 @@ class MbRandom;
 
 class TraitBranchEvent
 {
+
+public:
+
+    class PtrCompare
+    {
+    public:
+        bool operator()(const TraitBranchEvent* m1,
+                        const TraitBranchEvent* m2) const {
+            return *m1 < *m2;
+        }
+    };
 
 private:
 
@@ -206,19 +214,6 @@ inline void TraitBranchEvent::setIsEventTimeVariable(bool x)
 }
 
 
-class TraitBranchEventPtrCompare
-{
-public:
-    bool operator()(const TraitBranchEvent* m1,
-                    const TraitBranchEvent* m2) const;
-};
-
-
-inline bool TraitBranchEventPtrCompare::operator()
-    (const TraitBranchEvent* m1, const TraitBranchEvent* m2) const
-{
-    return *m1 < *m2;
-}
 
 
 #endif

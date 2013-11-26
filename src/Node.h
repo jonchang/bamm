@@ -1,27 +1,19 @@
-/*
- *  Node.h
- *  proj7
- *
- *  Created by Dan Rabosky on 9/16/11.
-  *
- */
-
 #ifndef NODE_H
 #define NODE_H
 
 #include <string>
-
-//class MbRandom;
-class branchEvent;
-class eventSet;
-class Phenotype;
-
-class BranchHistory;
-class TraitBranchHistory;
+#include "BranchHistory.h"
+#include "SpExBranchEvent.h"
+#include "TraitBranchEvent.h"
 
 
 class Node
 {
+
+public:
+
+    typedef BranchHistory<SpExBranchEvent> SpExBranchHistory;
+    typedef BranchHistory<TraitBranchEvent> TraitBranchHistory;
 
 private:
 
@@ -47,7 +39,7 @@ private:
     double _mapStart;
     double _mapEnd;
 
-    BranchHistory*  history;
+    SpExBranchHistory*  history;
     TraitBranchHistory* _traitHistory;
 
     // For phenotypes:
@@ -137,7 +129,7 @@ public:
     double getMapEnd();
 
     //Need to includet this
-    BranchHistory* getBranchHistory();
+    SpExBranchHistory* getBranchHistory();
     TraitBranchHistory* getTraitBranchHistory();
 
     void   setMeanSpeciationRate(double x);
@@ -389,16 +381,17 @@ inline double Node::getMapEnd()
 }
 
 
-inline BranchHistory* Node::getBranchHistory()
+inline Node::SpExBranchHistory* Node::getBranchHistory()
 {
     return history;
 }
 
 
-inline TraitBranchHistory* Node::getTraitBranchHistory()
+inline Node::TraitBranchHistory* Node::getTraitBranchHistory()
 {
     return _traitHistory;
 }
+
 
 inline void Node::setMeanSpeciationRate(double x)
 {

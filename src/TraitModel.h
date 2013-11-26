@@ -1,19 +1,11 @@
-/*
- *  TraitModel.h
- *  BAMMt
- *
- *  Created by Dan Rabosky on 6/20/12.
-
- *
- */
-
-#ifndef TRAITMODEL_H
-#define TRAITMODEL_H
+#ifndef TRAIT_MODEL_H
+#define TRAIT_MODEL_H
 
 #include <set>
 #include <vector>
 #include <sstream>
 
+#include "BranchHistory.h"
 #include "TraitBranchEvent.h"
 
 //Forward declarations
@@ -28,6 +20,9 @@ double proportionalShrink(double x, double scale);
 
 class TraitModel
 {
+
+    typedef BranchHistory<TraitBranchEvent> TraitBranchHistory;
+    typedef std::set<TraitBranchEvent*, TraitBranchEvent::PtrCompare> EventSet;
 
 public:
 
@@ -169,7 +164,7 @@ private:
     int rejectCount;
 
     // Event collection does not contain the root event
-    std::set<TraitBranchEvent*, TraitBranchEventPtrCompare> eventCollection;
+    EventSet eventCollection;
     TraitBranchEvent* rootEvent; //branch event at root node; can't be modified
 
     double lastDeletedEventMapTime; // map time of last deleted event
