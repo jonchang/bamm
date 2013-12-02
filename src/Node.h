@@ -3,17 +3,10 @@
 
 #include <string>
 #include "BranchHistory.h"
-#include "SpExBranchEvent.h"
-#include "TraitBranchEvent.h"
 
 
 class Node
 {
-
-public:
-
-    typedef BranchHistory<SpExBranchEvent> SpExBranchHistory;
-    typedef BranchHistory<TraitBranchEvent> TraitBranchHistory;
 
 private:
 
@@ -39,8 +32,7 @@ private:
     double _mapStart;
     double _mapEnd;
 
-    SpExBranchHistory*  history;
-    TraitBranchHistory* _traitHistory;
+    BranchHistory*  history;
 
     // For phenotypes:
     double _trait; // trait value
@@ -128,9 +120,7 @@ public:
     void   setMapEnd(double x);
     double getMapEnd();
 
-    //Need to includet this
-    SpExBranchHistory* getBranchHistory();
-    TraitBranchHistory* getTraitBranchHistory();
+    BranchHistory* getBranchHistory();
 
     void   setMeanSpeciationRate(double x);
     double getMeanSpeciationRate();
@@ -381,15 +371,9 @@ inline double Node::getMapEnd()
 }
 
 
-inline Node::SpExBranchHistory* Node::getBranchHistory()
+inline BranchHistory* Node::getBranchHistory()
 {
     return history;
-}
-
-
-inline Node::TraitBranchHistory* Node::getTraitBranchHistory()
-{
-    return _traitHistory;
 }
 
 

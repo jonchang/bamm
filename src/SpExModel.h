@@ -19,8 +19,6 @@ double proportionalShrink(double x, double scale);
 
 class SpExModel
 {
-
-    typedef BranchHistory<SpExBranchEvent> SpExBranchHistory;
     typedef std::set<SpExBranchEvent*, SpExBranchEvent::PtrCompare> EventSet;
 
 public:

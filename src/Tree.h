@@ -9,13 +9,10 @@
 
 class MbRandom;
 class Node;
-class TraitBranchEvent;
 
 
 class Tree
 {
-
-    typedef BranchHistory<TraitBranchEvent> TraitBranchHistory;
 
 private:
 

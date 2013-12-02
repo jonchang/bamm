@@ -20,8 +20,6 @@ double proportionalShrink(double x, double scale);
 
 class TraitModel
 {
-
-    typedef BranchHistory<TraitBranchEvent> TraitBranchHistory;
     typedef std::set<TraitBranchEvent*, TraitBranchEvent::PtrCompare> EventSet;
 
 public:
@@ -176,7 +174,7 @@ private:
     // state. At some point, these should have their own class
 
     // this is a pointer to the last event modified, whether
-    // it is moved, or has lambda updated, or whatever.
+    // it is moved, or has beta updated, or whatever.
     TraitBranchEvent* lastEventModified;
 
     // General acceptreject flag:

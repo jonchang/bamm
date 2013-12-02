@@ -121,7 +121,7 @@ TraitModel::TraitModel(MbRandom* ranptr, Tree* tp, Settings* sp)
           << x->getBetaShift() << "\n";
 
     // set NodeEvent of root node equal to the rootEvent:
-    tp->getRoot()->getTraitBranchHistory()->setNodeEvent(rootEvent);
+    tp->getRoot()->getBranchHistory()->setNodeEvent(rootEvent);
 
     //initializing all branch histories to equal the root event:
     forwardSetBranchHistories(rootEvent);
@@ -259,7 +259,7 @@ void TraitModel::initializeModelFromEventDataFileTrait(void)
 
                 TraitBranchEvent* newEvent = new TraitBranchEvent(beta_par1[i], beta_par2[i], x,
                         treePtr, ran, newmaptime);
-                newEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+                newEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
                     newEvent);
                 eventCollection.insert(newEvent);
                 forwardSetBranchHistories(newEvent);
@@ -275,7 +275,7 @@ void TraitModel::initializeModelFromEventDataFileTrait(void)
 
             TraitBranchEvent* newEvent = new TraitBranchEvent(beta_par1[i], beta_par2[i], x,
                     treePtr, ran, newmaptime);
-            newEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+            newEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
                 newEvent);
             eventCollection.insert(newEvent);
             forwardSetBranchHistories(newEvent);
@@ -332,7 +332,7 @@ void TraitModel::addEventToTree(double x)
 
     // add the event to the branch history.
     //  ALWAYS done after event is added to tree.
-    newEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+    newEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
         newEvent);
 
     eventCollection.insert(newEvent);
@@ -377,7 +377,7 @@ void TraitModel::addEventToTree(void)
     // on the ancestralNodeEvent
     Node* xnode = treePtr->mapEventToTree(x);
     double atime = treePtr->getAbsoluteTimeFromMapTime(x);
-    TraitBranchHistory* bh = xnode->getTraitBranchHistory();
+    BranchHistory* bh = xnode->getBranchHistory();
     TraitBranchEvent* be = bh->getAncestralNodeEvent();
 
     double elapsed = atime - be->getAbsoluteTime();
@@ -416,7 +416,7 @@ void TraitModel::addEventToTree(void)
 
 
 
-    newEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+    newEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
         newEvent);
 
     eventCollection.insert(newEvent);
@@ -459,7 +459,7 @@ void TraitModel::addEventToTreeWithSetBeta(double beta, double bshift)
     TraitBranchEvent* newEvent = new TraitBranchEvent(beta, bshift,
             treePtr->mapEventToTree(x), treePtr, ran, x);
 
-    newEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+    newEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
         newEvent);
 
     eventCollection.insert(newEvent);
@@ -538,26 +538,23 @@ TraitBranchEvent* TraitModel::chooseEventAtRandom(void)
 
 void TraitModel::eventLocalMove(void)
 {
-
-
-
-
     if (getNumberOfEvents() > 0) {
 
         // the event to be moved
-        TraitBranchEvent* chosenEvent = chooseEventAtRandom();
+        TraitBranchEvent* chosenEvent =
+            static_cast<TraitBranchEvent*>(chooseEventAtRandom());
 
         // corresponding node defining branch on which event occurs
         //Node* theEventNode = chosenEvent->getEventNode();
 
         // this is the event preceding the chosen event: histories should be set forward from here..
-        TraitBranchEvent* previousEvent =
-            chosenEvent->getEventNode()->getTraitBranchHistory()->getLastEvent(chosenEvent);
+        TraitBranchEvent* previousEvent = static_cast<TraitBranchEvent*>
+            (chosenEvent->getEventNode()->getBranchHistory()->getLastEvent(chosenEvent));
 
         // set this history variable in case move is rejected
-        lastEventModified = chosenEvent;
+        lastEventModified = static_cast<TraitBranchEvent*>(chosenEvent);
 
-        chosenEvent->getEventNode()->getTraitBranchHistory()->popEventOffBranchHistory(
+        chosenEvent->getEventNode()->getBranchHistory()->popEventOffBranchHistory(
             chosenEvent);
 		
 		// Get step size for move:
@@ -566,7 +563,7 @@ void TraitModel::eventLocalMove(void)
 
 		
         chosenEvent->moveEventLocal(step); // move event
-        chosenEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+        chosenEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
             chosenEvent);
 
         // Get last event from the theEventNode
@@ -594,19 +591,20 @@ void TraitModel::eventGlobalMove(void)
 
 
     if (getNumberOfEvents() > 0) {
-        TraitBranchEvent* chosenEvent = chooseEventAtRandom();
+        TraitBranchEvent* chosenEvent =
+            static_cast<TraitBranchEvent*>(chooseEventAtRandom());
 
         // this is the event preceding the chosen event: histories should be set forward from here..
-        TraitBranchEvent* previousEvent =
-            chosenEvent->getEventNode()->getTraitBranchHistory()->getLastEvent(chosenEvent);
+        TraitBranchEvent* previousEvent = static_cast<TraitBranchEvent*>
+            (chosenEvent->getEventNode()->getBranchHistory()->getLastEvent(chosenEvent));
 
         // private variable
         lastEventModified = chosenEvent;
 
-        chosenEvent->getEventNode()->getTraitBranchHistory()->popEventOffBranchHistory(
+        chosenEvent->getEventNode()->getBranchHistory()->popEventOffBranchHistory(
             chosenEvent);
         chosenEvent->moveEventGlobal(); // move event
-        chosenEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+        chosenEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
             chosenEvent);
 
         // Get last event from the theEventNode
@@ -636,14 +634,14 @@ void TraitModel::revertMovedEventToPrevious(void)
 
     // Get LAST EVENT from position of event to be removed:
 
-    TraitBranchEvent* newLastEvent =
-        lastEventModified->getEventNode()->getTraitBranchHistory()->getLastEvent(
-            lastEventModified);
+    TraitBranchEvent* newLastEvent = static_cast<TraitBranchEvent*>
+        (lastEventModified->getEventNode()->getBranchHistory()->
+             getLastEvent(lastEventModified));
 
     //BranchEvent * newLastEvent = getLastEvent(lastEventModified);
 
     // pop event off its new position
-    lastEventModified->getEventNode()->getTraitBranchHistory()->popEventOffBranchHistory(
+    lastEventModified->getEventNode()->getBranchHistory()->popEventOffBranchHistory(
         lastEventModified);
 
     // Reset nodeptr:
@@ -653,7 +651,7 @@ void TraitModel::revertMovedEventToPrevious(void)
     // Now: reset forward from lastEventModified (new position)
     //  and from newLastEvent, which holds 'last' event before old position
 
-    lastEventModified->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+    lastEventModified->getEventNode()->getBranchHistory()->addEventToBranchHistory(
         lastEventModified);
 
     // Forward set from new position
@@ -683,7 +681,7 @@ void TraitModel::revertMovedEventToPrevious(void)
 int TraitModel::countEventsInBranchHistory(Node* p)
 {
     int count = 0;
-    count += p->getTraitBranchHistory()->getNumberOfBranchEvents();
+    count += p->getBranchHistory()->getNumberOfBranchEvents();
     if (p->getLfDesc() != NULL)
         count += countEventsInBranchHistory(p->getLfDesc());
     if (p->getRtDesc() != NULL)
@@ -710,8 +708,8 @@ void TraitModel::deleteEventFromTree(TraitBranchEvent* be)
         Node* currNode = (be)->getEventNode();
 
         //get event downstream of i
-        TraitBranchEvent* newLastEvent =
-            currNode->getTraitBranchHistory()->getLastEvent(be);
+        TraitBranchEvent* newLastEvent = static_cast<TraitBranchEvent*>
+            (currNode->getBranchHistory()->getLastEvent(be));
 
         lastDeletedEventMapTime = (be)->getMapTime();
 
@@ -725,7 +723,7 @@ void TraitModel::deleteEventFromTree(TraitBranchEvent* be)
         _logQratioJump += ran->lnNormalPdf((double)0.0, sttings->getBetaShiftPrior(),
                                            _lastDeletedEventBetaShift);
 
-        currNode->getTraitBranchHistory()->popEventOffBranchHistory((be));
+        currNode->getBranchHistory()->popEventOffBranchHistory((be));
 
         eventCollection.erase(be);
 
@@ -769,8 +767,8 @@ void TraitModel::deleteRandomEventFromTree(void)
                 Node* currNode = (*i)->getEventNode();
 
                 //get event downstream of i
-                TraitBranchEvent* newLastEvent =
-                    currNode->getTraitBranchHistory()->getLastEvent((*i));
+                TraitBranchEvent* newLastEvent = static_cast<TraitBranchEvent*>
+                    (currNode->getBranchHistory()->getLastEvent(*i));
 
                 lastDeletedEventMapTime = (*i)->getMapTime();
                 //lastDeletedEventBeta = (*i)->getBeta();
@@ -779,7 +777,7 @@ void TraitModel::deleteRandomEventFromTree(void)
                 _lastDeletedEventBetaShift = (*i)->getBetaShift();
 
 
-                currNode->getTraitBranchHistory()->popEventOffBranchHistory((*i));
+                currNode->getBranchHistory()->popEventOffBranchHistory((*i));
 
                 /************************/
                 _logQratioJump = 0.0;
@@ -835,7 +833,7 @@ void TraitModel::restoreLastDeletedEvent(void)
 
     // add the event to the branch history.
     //  ALWAYS done after event is added to tree.
-    newEvent->getEventNode()->getTraitBranchHistory()->addEventToBranchHistory(
+    newEvent->getEventNode()->getBranchHistory()->addEventToBranchHistory(
         newEvent);
 
     eventCollection.insert(newEvent);
@@ -1726,10 +1724,10 @@ bool TraitModel::acceptMetropolisHastings(const double lnR)
 void TraitModel::initializeBranchHistories(Node* x)
 {
     //std::cout << x << std::endl;
-    x->getTraitBranchHistory()->setNodeEvent(rootEvent);
+    x->getBranchHistory()->setNodeEvent(rootEvent);
 
     if (x->getAnc() != NULL)
-        x->getTraitBranchHistory()->setAncestralNodeEvent(rootEvent);
+        x->getBranchHistory()->setAncestralNodeEvent(rootEvent);
 
     if (x->getLfDesc() != NULL)
         initializeBranchHistories(x->getLfDesc());
@@ -1746,8 +1744,8 @@ void TraitModel::printStartAndEndEventStatesForBranch(Node* x)
 
     if (x != treePtr->getRoot()) {
         std::cout << "Node: " << x << "\tAnc: " <<
-             x->getTraitBranchHistory()->getAncestralNodeEvent();
-        std::cout << "\tevent: " << x->getTraitBranchHistory()->getNodeEvent() << std::endl;
+             x->getBranchHistory()->getAncestralNodeEvent();
+        std::cout << "\tevent: " << x->getBranchHistory()->getNodeEvent() << std::endl;
     }
 
     if (x->getLfDesc() != NULL)
@@ -1797,9 +1795,9 @@ void TraitModel::forwardSetBranchHistories(TraitBranchEvent* x)
         forwardSetHistoriesRecursive(myNode->getLfDesc());
         forwardSetHistoriesRecursive(myNode->getRtDesc());
 
-    } else if (x == myNode->getTraitBranchHistory()->getLastEvent()) {
+    } else if (x == myNode->getBranchHistory()->getLastEvent()) {
         // If TRUE, x is the most tip-wise event on branch.
-        myNode->getTraitBranchHistory()->setNodeEvent(x);
+        myNode->getBranchHistory()->setNodeEvent(x);
 
         // if myNode is not a tip:
         if (myNode->getLfDesc() != NULL && myNode->getRtDesc() != NULL) {
@@ -1820,15 +1818,15 @@ void TraitModel::forwardSetHistoriesRecursive(Node* p)
 {
 
     // Get event that characterizes parent node
-    TraitBranchEvent* lastEvent =
-        p->getAnc()->getTraitBranchHistory()->getNodeEvent();
+    TraitBranchEvent* lastEvent = static_cast<TraitBranchEvent*>
+        (p->getAnc()->getBranchHistory()->getNodeEvent());
     // set the ancestor equal to the event state of parent node:
-    p->getTraitBranchHistory()->setAncestralNodeEvent(lastEvent);
+    p->getBranchHistory()->setAncestralNodeEvent(lastEvent);
 
     // if no events on the branch, go down to descendants and do same thing
     //  otherwise, process terminates (because it hits another event on branch
-    if (p->getTraitBranchHistory()->getNumberOfBranchEvents() == 0) {
-        p->getTraitBranchHistory()->setNodeEvent(lastEvent);
+    if (p->getBranchHistory()->getNumberOfBranchEvents() == 0) {
+        p->getBranchHistory()->setNodeEvent(lastEvent);
         if (p->getLfDesc() != NULL)
             forwardSetHistoriesRecursive(p->getLfDesc());
         if (p->getRtDesc() != NULL)
@@ -1845,10 +1843,10 @@ void TraitModel::printBranchHistories(Node* x)
 
     if (x != treePtr->getRoot()) {
         std::cout << "Node: " << x;
-        std::cout << "\t#Events: " << x->getTraitBranchHistory()->getNumberOfBranchEvents()
+        std::cout << "\t#Events: " << x->getBranchHistory()->getNumberOfBranchEvents()
              << "\tStart: ";
-        std::cout << x->getTraitBranchHistory()->getAncestralNodeEvent() << "\tEnd: ";
-        std::cout << x->getTraitBranchHistory()->getNodeEvent() << std::endl;
+        std::cout << x->getBranchHistory()->getAncestralNodeEvent() << "\tEnd: ";
+        std::cout << x->getBranchHistory()->getNodeEvent() << std::endl;
 
     }
     if (x->getLfDesc() != NULL)
@@ -1969,8 +1967,8 @@ bool TraitModel::isEventConfigurationValid(TraitBranchEvent* be)
     if (be->getEventNode() == treePtr->getRoot()) {
         Node* rt = treePtr->getRoot()->getRtDesc();
         Node* lf = treePtr->getRoot()->getLfDesc();
-        if (rt->getTraitBranchHistory()->getNumberOfBranchEvents() > 0 &&
-                lf->getTraitBranchHistory()->getNumberOfBranchEvents() > 0) {
+        if (rt->getBranchHistory()->getNumberOfBranchEvents() > 0 &&
+                lf->getBranchHistory()->getNumberOfBranchEvents() > 0) {
             // events on both descendants of root. This fails.
             isValidConfig = false;
         } else
@@ -1989,18 +1987,18 @@ bool TraitModel::isEventConfigurationValid(TraitBranchEvent* be)
 
         if (anc == treePtr->getRoot())
             badsum++;
-        else if (anc->getTraitBranchHistory()->getNumberOfBranchEvents() > 0)
+        else if (anc->getBranchHistory()->getNumberOfBranchEvents() > 0)
             badsum++;
         else {
             // nothing;
         }
 
         // test lf desc:
-        if (lf->getTraitBranchHistory()->getNumberOfBranchEvents() > 0)
+        if (lf->getBranchHistory()->getNumberOfBranchEvents() > 0)
             badsum++;
 
         // test rt desc
-        if (rt->getTraitBranchHistory()->getNumberOfBranchEvents() > 0)
+        if (rt->getBranchHistory()->getNumberOfBranchEvents() > 0)
             badsum++;
 
         if (badsum == 3)

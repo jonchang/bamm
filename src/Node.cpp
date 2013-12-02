@@ -30,11 +30,9 @@ Node::Node(void)
     _branchTime = 0.0;
     _cladeName = "";
 
-    SpExBranchHistory* bh = new SpExBranchHistory();
-    TraitBranchHistory* tbh = new TraitBranchHistory();
+    BranchHistory* bh = new BranchHistory();
 
     history = bh;
-    _traitHistory = tbh;
 
     // Compound Poisson stuff
     _meanSpeciationRate = 0.0;
@@ -78,11 +76,8 @@ Node::Node(int x)
     _branchTime = 0.0;
     _cladeName = "";
 
-    SpExBranchHistory* bh = new SpExBranchHistory();
+    BranchHistory* bh = new BranchHistory();
     history = bh;
-
-    TraitBranchHistory* tbh = new TraitBranchHistory();
-    _traitHistory = tbh;
 
     _meanSpeciationRate = 0;
     _meanExtinctionRate = 0;
@@ -162,13 +157,13 @@ Node* Node::getRandomRightTipNode(void)
 void Node::computeNodeBranchSpeciationParams(void)
 {
 
-    SpExBranchHistory* bh = getBranchHistory();
+    BranchHistory* bh = getBranchHistory();
 
     if (getAnc() != NULL) {
+        SpExBranchEvent* ancestralEvent =
+            static_cast<SpExBranchEvent*>(bh->getAncestralNodeEvent());
+
         // Only compute mean branch rate if node is NOT the root
-
-
-
         double rate = 0.0;
         int n_events = bh->getNumberOfBranchEvents();
 
@@ -176,12 +171,13 @@ void Node::computeNodeBranchSpeciationParams(void)
 
             double t1 = getAnc()->getTime();
             double t2 = getTime();
-            // times must be relative to event occurrence time:
-            t1 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            t2 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
 
-            double zpar = bh->getAncestralNodeEvent()->getLamShift();
-            double lam0 = bh->getAncestralNodeEvent()->getLamInit();
+            // Times must be relative to event occurrence time:
+            t1 -= ancestralEvent->getAbsoluteTime();
+            t2 -= ancestralEvent->getAbsoluteTime();
+
+            double zpar = ancestralEvent->getLamShift();
+            double lam0 = ancestralEvent->getLamInit();
 
             if (zpar == 0)
                 rate = lam0;
@@ -212,10 +208,10 @@ void Node::computeNodeBranchSpeciationParams(void)
             tcheck += (t2 - t1);
 
             // times must be relative to initial time of event
-            t1 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            t2 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            double zpar = bh->getAncestralNodeEvent()->getLamShift();
-            double lam0 = bh->getAncestralNodeEvent()->getLamInit();
+            t1 -= ancestralEvent->getAbsoluteTime();
+            t2 -= ancestralEvent->getAbsoluteTime();
+            double zpar = ancestralEvent->getLamShift();
+            double lam0 = ancestralEvent->getLamInit();
 
             if (zpar == 0)
                 rate = lam0 * (t2 - t1);
@@ -230,13 +226,17 @@ void Node::computeNodeBranchSpeciationParams(void)
 
 
             for (int k = 1; k < n_events; k++) {
+                SpExBranchEvent* eventAtK = static_cast<SpExBranchEvent*>
+                    (bh->getEventByIndexPosition(k));
+                SpExBranchEvent* eventAtKMinus1 = static_cast<SpExBranchEvent*>
+                    (bh->getEventByIndexPosition(k - 1));
 
                 //t1 = t2;
                 t1 = 0.0;
-                t2 = bh->getEventByIndexPosition(k)->getAbsoluteTime() -
-                     bh->getEventByIndexPosition((k - 1))->getAbsoluteTime();
-                zpar = bh->getEventByIndexPosition((k - 1))->getLamShift();
-                lam0 = bh->getEventByIndexPosition((k - 1))->getLamInit();
+                t2 = eventAtK->getAbsoluteTime() -
+                     eventAtKMinus1->getAbsoluteTime();
+                zpar = eventAtKMinus1->getLamShift();
+                lam0 = eventAtKMinus1->getLamInit();
 
                 if (zpar == 0)
                     rate += lam0 * (t2 - t1);
@@ -246,12 +246,14 @@ void Node::computeNodeBranchSpeciationParams(void)
                 tcheck += (t2 - t1);
             }
 
-            //t1 = t2;
             t1 = 0.0;
-            t2 = getTime() - bh->getEventByIndexPosition((n_events - 1))->getAbsoluteTime();
+            t2 = getTime() - bh->getEventByIndexPosition(n_events - 1)->getAbsoluteTime();
 
-            zpar = bh->getNodeEvent()->getLamShift();
-            lam0 = bh->getNodeEvent()->getLamInit();
+            SpExBranchEvent* event = static_cast<SpExBranchEvent*>
+                (bh->getNodeEvent());
+
+            zpar = event->getLamShift();
+            lam0 = event->getLamInit();
             if (zpar == 0)
                 rate += lam0 * (t2 - t1);
             else
@@ -274,9 +276,9 @@ void Node::computeNodeBranchSpeciationParams(void)
     }
 
     // compute speciation rate at the focal node:
-    double reltime = getTime() - bh->getNodeEvent()->getAbsoluteTime();
-    double curLam = bh->getNodeEvent()->getLamInit() * exp((
-                        reltime * bh->getNodeEvent()->getLamShift()));
+    SpExBranchEvent* event = static_cast<SpExBranchEvent*>(bh->getNodeEvent());
+    double reltime = getTime() - event->getAbsoluteTime();
+    double curLam = event->getLamInit() * exp((reltime * event->getLamShift()));
 
 
 #ifdef DEBUG_TIME_VARIABLE
@@ -301,13 +303,13 @@ void Node::computeNodeBranchSpeciationParams(void)
 void Node::computeNodeBranchExtinctionParams(void)
 {
 
-    SpExBranchHistory* bh = getBranchHistory();
+    BranchHistory* bh = getBranchHistory();
 
     if (getAnc() != NULL) {
+        SpExBranchEvent* ancestralEvent =
+            static_cast<SpExBranchEvent*>(bh->getAncestralNodeEvent());
+
         // Only compute mean branch rate if node is NOT the root
-
-
-
         double rate = 0.0;
         int n_events = bh->getNumberOfBranchEvents();
 
@@ -315,12 +317,13 @@ void Node::computeNodeBranchExtinctionParams(void)
 
             double t1 = getAnc()->getTime();
             double t2 = getTime();
-            // times must be relative to event occurrence time:
-            t1 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            t2 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
 
-            double zpar = bh->getAncestralNodeEvent()->getMuShift();
-            double r0 = bh->getAncestralNodeEvent()->getMuInit();
+            // Times must be relative to event occurrence time:
+            t1 -= ancestralEvent->getAbsoluteTime();
+            t2 -= ancestralEvent->getAbsoluteTime();
+
+            double zpar = ancestralEvent->getMuShift();
+            double r0 = ancestralEvent->getMuInit();
 
             if (zpar == 0)
                 rate = r0;
@@ -338,11 +341,11 @@ void Node::computeNodeBranchExtinctionParams(void)
 
             tcheck += (t2 - t1);
 
-            // times must be relative to initial time of event
-            t1 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            t2 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            double zpar = bh->getAncestralNodeEvent()->getMuShift();
-            double r0 = bh->getAncestralNodeEvent()->getMuInit();
+            // Times must be relative to initial time of event
+            t1 -= ancestralEvent->getAbsoluteTime();
+            t2 -= ancestralEvent->getAbsoluteTime();
+            double zpar = ancestralEvent->getMuShift();
+            double r0 = ancestralEvent->getMuInit();
 
             if (zpar == 0)
                 rate = r0 * (t2 - t1);
@@ -357,14 +360,17 @@ void Node::computeNodeBranchExtinctionParams(void)
 
 
             for (int k = 1; k < n_events; k++) {
+                SpExBranchEvent* eventAtK = static_cast<SpExBranchEvent*>
+                    (bh->getEventByIndexPosition(k));
+                SpExBranchEvent* eventAtKMinus1 = static_cast<SpExBranchEvent*>
+                    (bh->getEventByIndexPosition(k - 1));
 
                 //t1 = t2;
                 t1 = 0.0;
-                t2 = bh->getEventByIndexPosition(k)->getAbsoluteTime() -
-                     bh->getEventByIndexPosition((k - 1))->getAbsoluteTime();
-                zpar = bh->getEventByIndexPosition((k - 1))->getMuShift();
-                r0 = bh->getEventByIndexPosition((k - 1))->getMuInit();
-
+                t2 = eventAtK->getAbsoluteTime() -
+                     eventAtKMinus1->getAbsoluteTime();
+                zpar = eventAtKMinus1->getMuShift();
+                r0 = eventAtKMinus1->getMuInit();
 
                 if (zpar == 0)
                     rate += r0 * (t2 - t1);
@@ -378,8 +384,11 @@ void Node::computeNodeBranchExtinctionParams(void)
             t1 = 0.0;
             t2 = getTime() - bh->getEventByIndexPosition((n_events - 1))->getAbsoluteTime();
 
-            zpar = bh->getNodeEvent()->getMuShift();
-            r0 = bh->getNodeEvent()->getMuInit();
+            SpExBranchEvent* event = static_cast<SpExBranchEvent*>
+                (bh->getNodeEvent());
+
+            zpar = event->getMuShift();
+            r0 = event->getMuInit();
             if (zpar == 0)
                 rate += r0 * (t2 - t1);
             else
@@ -401,9 +410,9 @@ void Node::computeNodeBranchExtinctionParams(void)
     }
 
     // compute extinction rate at the focal node:
-    double reltime = getTime() - bh->getNodeEvent()->getAbsoluteTime();
-    double curMu = bh->getNodeEvent()->getMuInit() * exp(( reltime *
-                   bh->getNodeEvent()->getMuShift()));
+    SpExBranchEvent* event = static_cast<SpExBranchEvent*>(bh->getNodeEvent());
+    double reltime = getTime() - event->getAbsoluteTime();
+    double curMu = event->getMuInit() * exp(( reltime * event->getMuShift()));
 
     setNodeMu(curMu); // extinction rate for node set
 
@@ -420,22 +429,26 @@ void Node::computeNodeBranchExtinctionParams(void)
 double Node::getPointExtinction(double branchtime)
 {
 
-    SpExBranchHistory* bh = getBranchHistory();
+    BranchHistory* bh = getBranchHistory();
     double abstime = getTime() + getBrlen() - branchtime;
     double reltime = 0.0;
     double curMu = 0.0;
     if (bh->getNumberOfBranchEvents() == 0) {
-        reltime = abstime - bh->getNodeEvent()->getAbsoluteTime();
-        curMu = bh->getNodeEvent()->getMuInit() * exp(( reltime *
-                bh->getNodeEvent()->getMuShift()));
+        SpExBranchEvent* event =
+            static_cast<SpExBranchEvent*>(bh->getNodeEvent());
+        reltime = abstime - event->getAbsoluteTime();
+        curMu = event->getMuInit() * exp(( reltime * event->getMuShift()));
     } else {
         //multi-event scenario
-        SpExBranchEvent* lastEvent = bh->getAncestralNodeEvent();
+        SpExBranchEvent* lastEvent =
+            static_cast<SpExBranchEvent*>(bh->getAncestralNodeEvent());
         for (int i = 0; i < bh->getNumberOfBranchEvents(); i++) {
-            SpExBranchEvent* temp_be = bh->getEventByIndexPosition(i);
+            SpExBranchEvent* temp_be =
+                static_cast<SpExBranchEvent*>(bh->getEventByIndexPosition(i));
             if (temp_be->getAbsoluteTime() > abstime )
                 break;
-            lastEvent = bh->getEventByIndexPosition(i);
+            lastEvent = static_cast<SpExBranchEvent*>
+                (bh->getEventByIndexPosition(i));
         }
         reltime = abstime - lastEvent->getAbsoluteTime();
         if (reltime < 0) {
@@ -468,7 +481,7 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
              << std::endl;
         throw;
     }
-    SpExBranchHistory* bh = getBranchHistory();
+    BranchHistory* bh = getBranchHistory();
 
     double rate = 0.0;
     //std::cout << "at start: tstart: " << tstart << "\ttstop: " << tstop << std::endl;
@@ -488,11 +501,13 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
         // times must be relative to event occurrence time:
         //std::cout << "LE time: " << bh->getLastEvent(tstart)->getAbsoluteTime() << std::endl;
 
-        t1 -= bh->getLastEvent(tstart)->getAbsoluteTime();
-        t2 -= bh->getLastEvent(tstart)->getAbsoluteTime();
+        SpExBranchEvent* lastEvent =
+            static_cast<SpExBranchEvent*>(bh->getLastEvent(tstart));
 
-        double zpar = bh->getLastEvent(tstart)->getLamShift();
-        double lam0 = bh->getLastEvent(tstart)->getLamInit();
+        t1 -= lastEvent->getAbsoluteTime();
+        t2 -= lastEvent->getAbsoluteTime();
+        double zpar = lastEvent->getLamShift();
+        double lam0 = lastEvent->getLamInit();
 
         //std::cout << "z: " << zpar << "\tlam0: " << lam0 << "\tt1: " << t1 << "\tt2: " << t2 << std::endl;
 
@@ -513,7 +528,9 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
         double tcheck = 0.0;
         double tabs1 = tstart;
         // get next event from t1:
-        SpExBranchEvent* be = bh->getLastEvent(tabs1);
+        SpExBranchEvent* be =
+            static_cast<SpExBranchEvent*>(bh->getLastEvent(tabs1));
+
         double tabs2 = bh->getNextEvent(tabs1)->getAbsoluteTime();
 
         tcheck += (tabs2 - tabs1);
@@ -534,7 +551,7 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
             rate = ((lam0 / zpar) * ( exp(zpar * trel2) - exp( zpar * trel1)));
         }
         //std::cout << "rate1 : " << rate;
-        be = bh->getNextEvent(tabs1);
+        be = static_cast<SpExBranchEvent*>(bh->getNextEvent(tabs1));
         for (int k = 1; k < n_events; k++) {
 
             tabs1 = be->getAbsoluteTime();
@@ -548,7 +565,7 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
             else
                 rate += (lam0 / zpar) * ( exp(zpar * trel2) - exp(zpar * trel1));
             tcheck += (trel2 - trel1);
-            be = bh->getNextEvent(tabs1);
+            be = static_cast<SpExBranchEvent*>(bh->getNextEvent(tabs1));
         }
 
         //t1 = t2;
@@ -594,7 +611,7 @@ double Node::computeSpeciationRateIntervalAbsoluteTime(double tstart,
         throw;
     }
 
-    SpExBranchHistory* bh = getBranchHistory();
+    BranchHistory* bh = getBranchHistory();
 
     double rate = 0.0;
     //std::cout << "at start: tstart: " << tstart << "\ttstop: " << tstop << std::endl;
@@ -614,11 +631,14 @@ double Node::computeSpeciationRateIntervalAbsoluteTime(double tstart,
         // times must be relative to event occurrence time:
         //std::cout << "LE time: " << bh->getLastEvent(tstart)->getAbsoluteTime() << std::endl;
 
-        t1 -= bh->getLastEvent(tstart)->getAbsoluteTime();
-        t2 -= bh->getLastEvent(tstart)->getAbsoluteTime();
+        SpExBranchEvent* lastEvent =
+            static_cast<SpExBranchEvent*>(bh->getLastEvent(tstart));
 
-        double zpar = bh->getLastEvent(tstart)->getLamShift();
-        double lam0 = bh->getLastEvent(tstart)->getLamInit();
+        t1 -= lastEvent->getAbsoluteTime();
+        t2 -= lastEvent->getAbsoluteTime();
+
+        double zpar = lastEvent->getLamShift();
+        double lam0 = lastEvent->getLamInit();
 
         //std::cout << "z: " << zpar << "\tlam0: " << lam0 << "\tt1: " << t1 << "\tt2: " << t2 << std::endl;
 
@@ -639,7 +659,9 @@ double Node::computeSpeciationRateIntervalAbsoluteTime(double tstart,
         double tcheck = 0.0;
         double tabs1 = tstart;
         // get next event from t1:
-        SpExBranchEvent* be = bh->getLastEvent(tabs1);
+        SpExBranchEvent* be =
+            static_cast<SpExBranchEvent*>(bh->getLastEvent(tabs1));
+
         double tabs2 = bh->getNextEvent(tabs1)->getAbsoluteTime();
 
         tcheck += (tabs2 - tabs1);
@@ -660,7 +682,7 @@ double Node::computeSpeciationRateIntervalAbsoluteTime(double tstart,
             rate = ((lam0 / zpar) * ( exp(zpar * trel2) - exp( zpar * trel1)));
         }
         //std::cout << "rate1 : " << rate;
-        be = bh->getNextEvent(tabs1);
+        be = static_cast<SpExBranchEvent*>(bh->getNextEvent(tabs1));
         for (int k = 1; k < n_events; k++) {
 
             tabs1 = be->getAbsoluteTime();
@@ -674,7 +696,7 @@ double Node::computeSpeciationRateIntervalAbsoluteTime(double tstart,
             else
                 rate += (lam0 / zpar) * ( exp(zpar * trel2) - exp(zpar * trel1));
             tcheck += (trel2 - trel1);
-            be = bh->getNextEvent(tabs1);
+            be = static_cast<SpExBranchEvent*>(bh->getNextEvent(tabs1));
         }
 
         //t1 = t2;
@@ -712,7 +734,7 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
              << std::endl;
         throw;
     }
-    SpExBranchHistory* bh = getBranchHistory();
+    BranchHistory* bh = getBranchHistory();
 
     double rate = 0.0;
 
@@ -726,13 +748,16 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
 
         double t1 = tstart;
         double t2 = tstop;
+
+        SpExBranchEvent* lastEvent =
+            static_cast<SpExBranchEvent*>(bh->getLastEvent(tstart));
+
         // times must be relative to event occurrence time:
+        t1 -= lastEvent->getAbsoluteTime();
+        t2 -= lastEvent->getAbsoluteTime();
 
-        t1 -= bh->getLastEvent(tstart)->getAbsoluteTime();
-        t2 -= bh->getLastEvent(tstart)->getAbsoluteTime();
-
-        double zpar = bh->getLastEvent(tstart)->getMuShift();
-        double mu0  = bh->getLastEvent(tstart)->getMuInit();
+        double zpar = lastEvent->getMuShift();
+        double mu0  = lastEvent->getMuInit();
 
         if (zpar == 0)
             rate = mu0;
@@ -751,7 +776,8 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
         double tcheck = 0.0;
         double tabs1 = tstart;
         // get next event from t1:
-        SpExBranchEvent* be = bh->getLastEvent(tabs1);
+        SpExBranchEvent* be =
+            static_cast<SpExBranchEvent*>(bh->getLastEvent(tabs1));
         double tabs2 = bh->getNextEvent(tabs1)->getAbsoluteTime();
 
         tcheck += (tabs2 - tabs1);
@@ -772,7 +798,7 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
             rate = ((mu0 / zpar) * ( exp(zpar * trel2) - exp( zpar * trel1)));
         }
 
-        be = bh->getNextEvent(tabs1);
+        be = static_cast<SpExBranchEvent*>(bh->getNextEvent(tabs1));
         for (int k = 1; k < n_events; k++) {
 
             tabs1 = be->getAbsoluteTime();
@@ -786,7 +812,7 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
             else
                 rate += (mu0 / zpar) * ( exp(zpar * trel2) - exp(zpar * trel1));
             tcheck += (trel2 - trel1);
-            be = bh->getNextEvent(tabs1);
+            be = static_cast<SpExBranchEvent*>(bh->getNextEvent(tabs1));
         }
 
         //t1 = t2;

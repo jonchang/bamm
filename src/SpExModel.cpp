@@ -305,7 +305,7 @@ void SpExModel::addEventToTree(double x)
     // on the ancestralNodeEvent
     Node* xnode = treePtr->mapEventToTree(x);
     double atime = treePtr->getAbsoluteTimeFromMapTime(x);
-    SpExBranchHistory* bh = xnode->getBranchHistory();
+    BranchHistory* bh = xnode->getBranchHistory();
     SpExBranchEvent* be = bh->getAncestralNodeEvent();
 
     double elapsed = atime - be->getAbsoluteTime();
@@ -406,7 +406,7 @@ void SpExModel::addEventToTree(void)
     // on the ancestralNodeEvent
     Node* xnode = treePtr->mapEventToTree(x);
     double atime = treePtr->getAbsoluteTimeFromMapTime(x);
-    SpExBranchHistory* bh = xnode->getBranchHistory();
+    BranchHistory* bh = xnode->getBranchHistory();
     SpExBranchEvent* be = bh->getAncestralNodeEvent();
 
     double elapsed = atime - be->getAbsoluteTime();
@@ -551,8 +551,8 @@ void SpExModel::eventLocalMove(void)
         //Node* theEventNode = chosenEvent->getEventNode();
 
         // this is the event preceding the chosen event: histories should be set forward from here..
-        SpExBranchEvent* previousEvent =
-            chosenEvent->getEventNode()->getBranchHistory()->getLastEvent(chosenEvent);
+        SpExBranchEvent* previousEvent = static_cast<SpExBranchEvent*>
+            (chosenEvent->getEventNode()->getBranchHistory()->getLastEvent(chosenEvent));
 
         // set this history variable in case move is rejected
         lastEventModified = chosenEvent;
@@ -589,8 +589,8 @@ void SpExModel::eventGlobalMove(void)
         SpExBranchEvent* chosenEvent = chooseEventAtRandom();
 
         // this is the event preceding the chosen event: histories should be set forward from here..
-        SpExBranchEvent* previousEvent =
-            chosenEvent->getEventNode()->getBranchHistory()->getLastEvent(chosenEvent);
+        SpExBranchEvent* previousEvent = static_cast<SpExBranchEvent*>
+            (chosenEvent->getEventNode()->getBranchHistory()->getLastEvent(chosenEvent));
 
         //Node* theEventNode = chosenEvent->getEventNode();
 
@@ -625,9 +625,9 @@ void SpExModel::revertMovedEventToPrevious(void)
 
     // Get LAST EVENT from position of event to be removed:
 
-    SpExBranchEvent* newLastEvent =
-        lastEventModified->getEventNode()->getBranchHistory()->getLastEvent(
-            lastEventModified);
+    SpExBranchEvent* newLastEvent = static_cast<SpExBranchEvent*>
+        (lastEventModified->getEventNode()->getBranchHistory()->
+            getLastEvent(lastEventModified));
 
     //BranchEvent * newLastEvent = getLastEvent(lastEventModified);
 
@@ -698,7 +698,8 @@ void SpExModel::deleteEventFromTree(SpExBranchEvent* be)
         Node* currNode = (be)->getEventNode();
 
         //get event downstream of i
-        SpExBranchEvent* newLastEvent = currNode->getBranchHistory()->getLastEvent(be);
+        SpExBranchEvent* newLastEvent = static_cast<SpExBranchEvent*>
+            (currNode->getBranchHistory()->getLastEvent(be));
 
         lastDeletedEventMapTime = (be)->getMapTime();
         _lastDeletedEventLambdaInit = (be)->getLamInit();
@@ -760,7 +761,8 @@ void SpExModel::deleteRandomEventFromTree(void)
                 Node* currNode = (*i)->getEventNode();
 
                 //get event downstream of i
-                SpExBranchEvent* newLastEvent = currNode->getBranchHistory()->getLastEvent((*i));
+                SpExBranchEvent* newLastEvent = static_cast<SpExBranchEvent*>
+                    (currNode->getBranchHistory()->getLastEvent(*i));
 
                 lastDeletedEventMapTime = (*i)->getMapTime();
                 //lastDeletedEventBeta = (*i)->getBeta();
@@ -2010,7 +2012,8 @@ void SpExModel::forwardSetHistoriesRecursive(Node* p)
 {
 
     // Get event that characterizes parent node
-    SpExBranchEvent* lastEvent = p->getAnc()->getBranchHistory()->getNodeEvent();
+    SpExBranchEvent* lastEvent = static_cast<SpExBranchEvent*>
+        (p->getAnc()->getBranchHistory()->getNodeEvent());
     // set the ancestor equal to the event state of parent node:
     p->getBranchHistory()->setAncestralNodeEvent(lastEvent);
 

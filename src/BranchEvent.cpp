@@ -4,6 +4,7 @@
 #include "Node.h"
 #include "Tree.h"
 #include "MbRandom.h"
+#include "Log.h"
 
 
 BranchEvent::BranchEvent(Node* x, Tree* tp, MbRandom* rp, double map) :

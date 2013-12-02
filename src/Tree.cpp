@@ -9,6 +9,7 @@
 #include "Tree.h"
 #include "Node.h"
 #include "BranchHistory.h"
+#include "TraitBranchEvent.h"
 #include "MbRandom.h"
 #include "Log.h"
 
@@ -1592,11 +1593,13 @@ void Tree::setMeanBranchTraitRates(void)
 
 void Tree::computeMeanTraitRatesByNode(Node* x)
 {
-    TraitBranchHistory* bh = x->getTraitBranchHistory();
+    BranchHistory* bh = x->getBranchHistory();
 
     if (x->getAnc() != NULL) {
-        // Only compute mean branch rate if node is NOT the root
+        TraitBranchEvent* ancestralEvent =
+            static_cast<TraitBranchEvent*>(bh->getAncestralNodeEvent());
 
+        // Only compute mean branch rate if node is NOT the root
         double rate = 0.0;
         int n_events = bh->getNumberOfBranchEvents();
 
@@ -1604,12 +1607,13 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
             
             double t1 = x->getAnc()->getTime();
             double t2 = x->getTime();
-            // times must be relative to event occurrence time:
-            t1 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            t2 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
 
-            double zpar = bh->getAncestralNodeEvent()->getBetaShift();
-            double beta0 = bh->getAncestralNodeEvent()->getBetaInit();
+            // Times must be relative to event occurrence time:
+            t1 -= ancestralEvent->getAbsoluteTime();
+            t2 -= ancestralEvent->getAbsoluteTime();
+
+            double zpar = ancestralEvent->getBetaShift();
+            double beta0 = ancestralEvent->getBetaInit();
 
             if (zpar == 0) {
                 rate = beta0;
@@ -1627,10 +1631,10 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
             tcheck += (t2 - t1);
 
             // times must be relative to initial time of event
-            t1 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            t2 -= bh->getAncestralNodeEvent()->getAbsoluteTime();
-            double zpar = bh->getAncestralNodeEvent()->getBetaShift();
-            double beta0 = bh->getAncestralNodeEvent()->getBetaInit();
+            t1 -= ancestralEvent->getAbsoluteTime();
+            t2 -= ancestralEvent->getAbsoluteTime();
+            double zpar = ancestralEvent->getBetaShift();
+            double beta0 = ancestralEvent->getBetaInit();
 
             if (zpar == 0) {
                 rate = beta0 * (t2 - t1);
@@ -1651,8 +1655,13 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
                 t1 = 0.0;
                 t2 = bh->getEventByIndexPosition(k)->getAbsoluteTime() -
                      bh->getEventByIndexPosition((k - 1))->getAbsoluteTime();
-                zpar = bh->getEventByIndexPosition((k - 1))->getBetaShift();
-                beta0 = bh->getEventByIndexPosition((k - 1))->getBetaInit();
+
+                TraitBranchEvent* eventAtKMinus1 =
+                    static_cast<TraitBranchEvent*>
+                        (bh->getEventByIndexPosition(k - 1));
+
+                zpar = eventAtKMinus1->getBetaShift();
+                beta0 = eventAtKMinus1->getBetaInit();
 
                 if (zpar == 0) {
                     rate += beta0 * (t2 - t1);
@@ -1665,11 +1674,14 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
 
             //t1 = t2;
             t1 = 0.0;
-            t2 = x->getTime() - bh->getEventByIndexPosition((n_events -
-                    1))->getAbsoluteTime();
+            t2 = x->getTime() -
+                bh->getEventByIndexPosition(n_events - 1)->getAbsoluteTime();
 
-            zpar = bh->getNodeEvent()->getBetaShift();
-            beta0 = bh->getNodeEvent()->getBetaInit();
+            TraitBranchEvent* event = static_cast<TraitBranchEvent*>
+                (bh->getNodeEvent());
+
+            zpar = event->getBetaShift();
+            beta0 = event->getBetaInit();
             if (zpar == 0) {
                 rate += beta0 * (t2 - t1);
             } else {
@@ -1695,10 +1707,13 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
 
     }
 
+    TraitBranchEvent* event =
+        static_cast<TraitBranchEvent*>(bh->getNodeEvent());
+
     // compute speciation rate at the focal node:
-    double reltime = x->getTime() - bh->getNodeEvent()->getAbsoluteTime();
-    double curBeta = bh->getNodeEvent()->getBetaInit() * exp((
-                         reltime * bh->getNodeEvent()->getBetaShift()));
+    double reltime = x->getTime() - event->getAbsoluteTime();
+    double curBeta =
+        event->getBetaInit() * exp(reltime * event->getBetaShift());
 
 #ifdef DEBUG_TIME_VARIABLE
 
