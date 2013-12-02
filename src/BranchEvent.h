@@ -46,6 +46,7 @@ private:
 public:
 
     BranchEvent(Node* x, Tree* tp, MbRandom*rp, double map);
+    virtual ~BranchEvent();
 
     void   setMapTime(double x);
     double getMapTime();

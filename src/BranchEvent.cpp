@@ -19,6 +19,11 @@ BranchEvent::BranchEvent(Node* x, Tree* tp, MbRandom* rp, double map) :
 }
 
 
+BranchEvent::~BranchEvent()
+{
+}
+
+
 // If maptime is > than a.maptime, then event must have occurred earlier
 // than a.maptime event; thus operator < would be true.
 // For a->maptime > b->maptime, then a < b evaluates to true.
