@@ -401,7 +401,6 @@ void Model::addEventMH()
     double oldLogPrior = computeLogPrior();
 
     int currState = (int)_eventCollection.size();
-    int proposedState = currState + 1;
 
     int K = currState;
     double qRatio = (K > 0) ? 1.0 : 0.5;
@@ -465,7 +464,6 @@ void Model::removeEventMH()
     double oldLogPrior = computeLogPrior();
 
     int currState = (int)_eventCollection.size();
-    int proposedState = currState - 1;
 
     int K = currState;
     double qRatio = (K != 1) ? 1.0 : 2.0;
