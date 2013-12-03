@@ -233,12 +233,12 @@ void TraitMCMC::writeHeaderToStream(std::ostream& outStream)
 
 void TraitMCMC::writeStateToStream(std::ostream& outStream)
 {
-    outStream << ModelPtr->getGeneration()     << ","
-              << ModelPtr->getNumberOfEvents() << ","
-              << ModelPtr->computeLogPrior()   << ","
-              << ModelPtr->getCurrLnLTraits()  << ","
-              << ModelPtr->getEventRate()      << ","
-              << ModelPtr->getMHacceptanceRate() << std::endl;
+    outStream << ModelPtr->getGeneration()            << ","
+              << ModelPtr->getNumberOfEvents()        << ","
+              << ModelPtr->computeLogPrior()          << ","
+              << ModelPtr->getCurrentLogLikelihood()  << ","
+              << ModelPtr->getEventRate()             << ","
+              << ModelPtr->getMHacceptanceRate()      << std::endl;
 }
 
 
@@ -252,7 +252,7 @@ void TraitMCMC::writeStateToStream(std::ostream& outStream)
 void TraitMCMC::printStateData(void)
 {
     log() << std::setw(15) << ModelPtr->getGeneration()
-          << std::setw(15) << ModelPtr->getCurrLnLTraits()
+          << std::setw(15) << ModelPtr->getCurrentLogLikelihood()
           << std::setw(15) << ModelPtr->getNumberOfEvents()
           << std::setw(15) << ModelPtr->computeLogPrior()
           << std::setw(15) << ModelPtr->getMHacceptanceRate()

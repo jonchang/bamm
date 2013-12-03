@@ -206,12 +206,12 @@ void SpExMCMC::writeStateToFile()
 
 void SpExMCMC::writeStateToStream(std::ostream& outStream)
 {
-    outStream << ModelPtr->getGeneration()       << ","
-              << ModelPtr->getNumberOfEvents()   << ","
-              << ModelPtr->computeLogPrior()     << ","
-              << ModelPtr->getCurrLnLBranches()  << ","
-              << ModelPtr->getEventRate()        << ","
-              << ModelPtr->getMHacceptanceRate() << std::endl;
+    outStream << ModelPtr->getGeneration()            << ","
+              << ModelPtr->getNumberOfEvents()        << ","
+              << ModelPtr->computeLogPrior()          << ","
+              << ModelPtr->getCurrentLogLikelihood()  << ","
+              << ModelPtr->getEventRate()             << ","
+              << ModelPtr->getMHacceptanceRate()      << std::endl;
 }
 
 
@@ -225,7 +225,7 @@ void SpExMCMC::writeStateToStream(std::ostream& outStream)
 void SpExMCMC::printStateData(void)
 {
     log() << std::setw(15) << ModelPtr->getGeneration()
-          << std::setw(15) << ModelPtr->getCurrLnLBranches()
+          << std::setw(15) << ModelPtr->getCurrentLogLikelihood()
           << std::setw(15) << ModelPtr->getNumberOfEvents()
           << std::setw(15) << ModelPtr->computeLogPrior()
           << std::setw(15) << ModelPtr->getMHacceptanceRate()
