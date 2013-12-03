@@ -527,6 +527,7 @@ void Model::moveEventMH(void)
     if (_eventCollection.size() == 0) {
         _rejectCount++;
         _acceptLast = 0;
+        incrementGeneration();
         return;
     }
 
