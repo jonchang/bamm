@@ -42,6 +42,7 @@ public:
     void addEventToTree();
     void deleteEventFromTree(BranchEvent* be);
     void deleteRandomEventFromTree();
+    void deleteEventFromTree(EventSet::iterator it);
 
     int getNumberOfEvents();
 

@@ -23,6 +23,7 @@ public:
     // constructors, depending on whether you want trait rate or lambda/mu
     SpExBranchEvent(double speciation, double lamshift, double extinction,
         double mushift, Node* x, Tree* tp, MbRandom*rp, double map);
+    virtual ~SpExBranchEvent() {};
 
     void   setLamInit(double x);
     double getLamInit();

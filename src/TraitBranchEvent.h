@@ -21,6 +21,7 @@ public:
     // constructors, depending on whether you want trait rate or lambda/mu
     TraitBranchEvent(double beta, double shift,
             Node* x, Tree* tp, MbRandom* rp, double map);
+    virtual ~TraitBranchEvent() {};
 
     void   setBetaInit(double x);
     double getBetaInit();

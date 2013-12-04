@@ -1,6 +1,6 @@
 #ifndef BRANCH_EVENT_H
 #define BRANCH_EVENT_H
-
+#include "Log.h"
 
 class Tree;
 class Node;
@@ -85,6 +85,7 @@ public:
 
 inline void BranchEvent::setMapTime(double x)
 {
+    log() << x << std::endl;
     mapTime = x;
 }
 

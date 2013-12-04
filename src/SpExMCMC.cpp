@@ -160,18 +160,25 @@ int SpExMCMC::pickParameterClassToUpdate(void)
 void SpExMCMC::updateState(int parm)
 {
     if (parm == 0) {
+        log() << "# events\n";
         ModelPtr->changeNumberOfEventsMH();
     } else if (parm == 1) {
+        log() << "move events\n";
         ModelPtr->moveEventMH();
     } else if (parm == 2) {
+        log() << "event rate\n";
         ModelPtr->updateEventRateMH();
     } else if (parm == 3) {
+        log() << "lambda init\n";
         ModelPtr->updateLambdaInitMH();
     } else if (parm == 4) {
+        log() << "lambda shift\n";
         ModelPtr->updateLambdaShiftMH();
     } else if (parm == 5) {
+        log() << "mu init\n";
         ModelPtr->updateMuInitMH();
     } else if (parm == 6) {
+        log() << "mu shift\n";
         ModelPtr->updateMuShiftMH();
     } else if (parm == 7) {
         // Update time variable partition:
@@ -193,6 +200,7 @@ void SpExMCMC::updateState(int parm)
         std::cout << "invalid accept/reject flag in model object" << std::endl;
         throw;
     }
+    log() << std::flush;
     // reset to unmodified value
     ModelPtr->setAcceptLastUpdate(-1);
 }

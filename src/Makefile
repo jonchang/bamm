@@ -2,7 +2,7 @@ OBJS = main.o Autotune.o SpExMCMC.o BranchHistory.o BranchEvent.o SpExBranchEven
 CC = g++
 DEBUG = -g
 GIT_COMMIT_ID = $(shell git rev-parse HEAD)
-CFLAGS = -Wall -Wextra -c -m64 -O3 -funroll-loops $(DEBUG)
+CFLAGS = -Wall -Wextra -c -m64 $(DEBUG)
 LFLAGS = -Wall -Wextra -m64 $(DEBUG)
 
 bamm: $(OBJS)

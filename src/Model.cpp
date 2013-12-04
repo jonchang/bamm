@@ -223,6 +223,19 @@ void Model::eventMove(bool local)
         // The event to be moved
         BranchEvent* chosenEvent = chooseEventAtRandom();
 
+        // Debug
+        BranchHistory* bh = chosenEvent->getEventNode()->getBranchHistory();
+        bool found = false;
+        for (int i = 0; i < bh->getNumberOfBranchEvents(); i++)
+            if (bh->getEventByIndexPosition(i) == chosenEvent) {
+                found = true;
+                break;
+            }
+        if (!found) {
+            log() << "not found: " << chosenEvent << std::endl;
+            throw;
+        }
+
         // This is the event preceding the chosen event:
         // histories should be set forward from here.
         BranchEvent* previousEvent = chosenEvent->getEventNode()->
@@ -329,7 +342,12 @@ void Model::deleteEventFromTree(BranchEvent* be)
 
     currNode->getBranchHistory()->popEventOffBranchHistory(be);
 
-    _eventCollection.erase(be);
+    int numDeleted = _eventCollection.erase(be);
+    if (numDeleted == 0) {
+        log(Error) << "Could not find event to delete.\n";
+        std::exit(1);
+    }
+
     delete be;
 
     forwardSetBranchHistories(newLastEvent);
@@ -354,10 +372,40 @@ void Model::deleteRandomEventFromTree()
     EventSet::iterator it;
     for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it) {
         if (counter++ == chosen) {
-            deleteEventFromTree(*it);
+            deleteEventFromTree(it);
             break;
         }
     }
+}
+
+void Model::deleteEventFromTree(EventSet::iterator it)
+{
+    BranchEvent* be = *it;
+
+    if (be == _rootEvent) {
+        log(Error) << "Can't delete root event.\n";
+        exit(1);
+    }
+
+    // Erase from branch history:
+    Node* currNode = be->getEventNode();
+
+    // Get event downstream of i
+    BranchEvent* newLastEvent = currNode->getBranchHistory()->getLastEvent(be);
+
+    _lastDeletedEventMapTime = be->getMapTime();
+
+    setDeletedEventParameters(be);
+    _logQRatioJump = calculateLogQRatioJump();
+
+    currNode->getBranchHistory()->popEventOffBranchHistory(be);
+
+    _eventCollection.erase(it);
+    delete be;
+
+    forwardSetBranchHistories(newLastEvent);
+
+    setMeanBranchParameters();
 }
 
 
