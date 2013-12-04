@@ -172,8 +172,8 @@ double SpExModel::calculateLogQRatioJump()
 BranchEvent* SpExModel::newBranchEventFromLastDeletedEvent()
 {
     SpExBranchEvent* newEvent = new SpExBranchEvent(0.0, 0.0, 0.0, 0.0,
-        _treePtr->mapEventToTree(lastDeletedEventMapTime), _treePtr, _ran,
-            lastDeletedEventMapTime);
+        _treePtr->mapEventToTree(_lastDeletedEventMapTime), _treePtr, _ran,
+            _lastDeletedEventMapTime);
 
     newEvent->setLamInit(_lastDeletedEventLambdaInit);
     newEvent->setLamShift(_lastDeletedEventLambdaShift);

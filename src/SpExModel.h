@@ -62,8 +62,6 @@ private:
     double _muInitPrior;
     double _muShiftPrior;
 
-    double lastDeletedEventMapTime; // map time of last deleted event
-
     double _lastDeletedEventLambdaInit;
     double _lastDeletedEventLambdaShift;
     double _lastDeletedEventMuInit;
