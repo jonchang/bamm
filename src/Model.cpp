@@ -545,7 +545,7 @@ void Model::moveEventMH(void)
 
     double logLikelihood = computeLogLikelihood();
     double logLikelihoodRatio = logLikelihood - getCurrentLogLikelihood();
-    double logHR = logLikelihood;
+    double logHR = logLikelihoodRatio;
 
     bool isValid = isEventConfigurationValid(_lastEventModified);
 
