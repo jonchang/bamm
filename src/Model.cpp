@@ -46,6 +46,8 @@ Model::Model(MbRandom* ranptr, Tree* tp, Settings* sp) :
     _acceptCount = 0;
     _rejectCount = 0;
     _acceptLast = -1;
+
+    _lastDeletedEventMapTime = 0;
 }
 
 
