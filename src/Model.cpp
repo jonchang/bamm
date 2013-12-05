@@ -223,19 +223,6 @@ void Model::eventMove(bool local)
         // The event to be moved
         BranchEvent* chosenEvent = chooseEventAtRandom();
 
-        // Debug
-        BranchHistory* bh = chosenEvent->getEventNode()->getBranchHistory();
-        bool found = false;
-        for (int i = 0; i < bh->getNumberOfBranchEvents(); i++)
-            if (bh->getEventByIndexPosition(i) == chosenEvent) {
-                found = true;
-                break;
-            }
-        if (!found) {
-            log() << "not found: " << chosenEvent << std::endl;
-            throw;
-        }
-
         // This is the event preceding the chosen event:
         // histories should be set forward from here.
         BranchEvent* previousEvent = chosenEvent->getEventNode()->

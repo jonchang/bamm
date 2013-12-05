@@ -1,8 +1,8 @@
 OBJS = main.o Autotune.o SpExMCMC.o BranchHistory.o BranchEvent.o SpExBranchEvent.o Node.o Tree.o Settings.o SettingsParameter.o Model.o TraitModel.o TraitMCMC.o MbRandom.o TraitBranchEvent.o SpExModel.o Log.o
 CC = g++
-DEBUG = -g
+DEBUG =
 GIT_COMMIT_ID = $(shell git rev-parse HEAD)
-CFLAGS = -Wall -Wextra -c -m64 $(DEBUG)
+CFLAGS = -Wall -Wextra -c -O3 -m64 $(DEBUG)
 LFLAGS = -Wall -Wextra -m64 $(DEBUG)
 
 bamm: $(OBJS)

@@ -201,14 +201,12 @@ BranchEvent* BranchHistory::getAncestralNodeEvent()
 
 void BranchHistory::popEventOffBranchHistory(BranchEvent* x)
 {
-    log() << "deleting event from history: " << x << std::endl;
     _eventsOnBranch.erase(x);
 }
 
 
 void BranchHistory::addEventToBranchHistory(BranchEvent* x)
 {
-    log() << "adding event to history: " << x << std::endl;
     _eventsOnBranch.insert(x);
 }
 

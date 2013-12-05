@@ -85,7 +85,6 @@ public:
 
 inline void BranchEvent::setMapTime(double x)
 {
-    log() << x << std::endl;
     mapTime = x;
 }
 
