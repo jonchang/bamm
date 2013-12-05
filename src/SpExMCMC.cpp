@@ -63,7 +63,7 @@ SpExMCMC::SpExMCMC(MbRandom* ran, SpExModel* mymodel, Settings* sp)
           << std::setw(15) << "NumShifts"    // Why not NumEvents?
           << std::setw(15) << "LogPrior"
           << std::setw(15) << "AcceptRate"
-          << "\n";
+          << std::endl;
 
     /*run chain*/
     for (int i = 0; i < _NGENS; i++) {
@@ -230,7 +230,7 @@ void SpExMCMC::printStateData(void)
           << std::setw(15) << ModelPtr->getNumberOfEvents()
           << std::setw(15) << ModelPtr->computeLogPrior()
           << std::setw(15) << ModelPtr->getMHacceptanceRate()
-          << "\n";
+          << std::endl;
 }
 
 ////////
@@ -271,7 +271,7 @@ void SpExMCMC::writeEventDataToFile(void)
 void SpExMCMC::writeHeadersToOutputFiles()
 {
     _mcmcOutStream << "generation,N_shifts,logPrior,logLik," <<
-        "eventRate,acceptRate\n";
+        "eventRate,acceptRate" << std::endl;
     _eventDataOutStream << "generation,leftchild,rightchild,abstime," <<
-        "lambdainit,lambdashift,muinit,mushift\n";
+        "lambdainit,lambdashift,muinit,mushift" << std::endl;
 }

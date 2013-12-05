@@ -49,11 +49,11 @@ getMarginalBranchRateMatrix <- function(obj, verbose=FALSE){
 			return(list(lambda_branch_matrix = lammat, mu_branch_matrix = mumat));
 		}
 		if (obj$type == 'traits'){
-			return(lammat)
+			return(list(beta_branch_matrix = lammat));
 		}
 	}
 	else if (class(obj[[1]]) == 'phylo'){
-		return(sapply(lambdatrees,with,edge.length))
+		return(sapply(obj,with,edge.length));
 	}
 }
 
