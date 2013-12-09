@@ -104,6 +104,7 @@ int main (int argc, char* argv[])
         } else if (mySettings.getInitializeModel() && mySettings.getRunMCMC()) {
             SpExModel myModel(&myRNG, &intree, &mySettings);
             SpExMCMC myMCMC(&myRNG, &myModel, &mySettings);
+            myMCMC.run();
         } else {
             log(Error) << "Unsupported option in main.\n";
             std::exit(1);

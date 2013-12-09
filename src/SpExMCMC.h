@@ -1,72 +1,48 @@
 #ifndef SP_EX_MCMC_H
 #define SP_EX_MCMC_H
 
-#include <stdlib.h>
-#include <string>
 #include <vector>
-#include <iosfwd>
+#include <string>
+#include <fstream>
+
+#include "MCMC.h"
 
 class MbRandom;
+class Model;
 class SpExModel;
 class Settings;
 
 
-class SpExMCMC
+class SpExMCMC : public MCMC
 {
 
 public:
 
-    SpExMCMC(MbRandom* ran, SpExModel* mymodel, Settings* sp);
-    ~SpExMCMC();
-
-    void writeStateToFile();
-    void printStateData();
-    void writeBranchSpeciationRatesToFile();
-    void writeBranchExtinctionRatesToFile();
-    void writeEventDataToFile();
-
-    int  pickParameterClassToUpdate();
-    void updateState(int parm);
-
-    void setUpdateWeights();
+    SpExMCMC(MbRandom* rng, Model* model, Settings* settings);
+    virtual ~SpExMCMC();
 
 private:
 
-    void writeHeaderToStream(std::ostream& outStream);
-    void writeStateToStream(std::ostream& outStream);
+    virtual void setUpSpecificParameterWeights();
+    virtual void updateSpecificState(int parameter);
 
-    bool anyOutputFileExists();
-    bool fileExists(const std::string& filename);
-    void writeHeadersToOutputFiles();
-    void exitWithErrorOutputFileExists();
+    virtual void outputSpecificEventDataHeaders();
 
-    MbRandom* ranPtr;
-    SpExModel*    ModelPtr;
-    Settings* sttings;
+    virtual void outputSpecificData(int generation);
+    void outputBranchSpeciationRates();
+    void outputBranchExtinctionRates();
 
-    std::vector<double> parWts;
+    SpExModel* _specificModel;
 
-    std::vector<int> acceptCount;
-    std::vector<int> rejectCount;
+    std::string _lambdaOutputFileName;
+    std::string _muOutputFileName;
 
-    std::string _mcmcOutFilename;
-    std::string _lambdaOutFilename;
-    std::string _muOutFilename;
-    std::string _eventDataOutFilename;
+    std::ofstream _lambdaOutputStream;
+    std::ofstream _muOutputStream;
 
-    std::ofstream _mcmcOutStream;
-    std::ofstream _lambdaOutStream;
-    std::ofstream _muOutStream;
-    std::ofstream _eventDataOutStream;
+    int _treeOutputFreq;
 
     bool _writeMeanBranchLengthTrees;
-
-    int _treeWriteFreq;
-    int _eventDataWriteFreq;
-    int _mcmcWriteFreq;
-    int _acceptWriteFreq;
-    int _printFreq;
-    int _NGENS;
 };
 
 

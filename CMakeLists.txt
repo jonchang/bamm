@@ -19,6 +19,7 @@ ADD_EXECUTABLE(bamm
     src/BranchHistory.cpp
     src/FastSimulatePrior.cpp
     src/Log.cpp
+    src/MCMC.cpp
     src/MbRandom.cpp
     src/Model.cpp
     src/Node.cpp
