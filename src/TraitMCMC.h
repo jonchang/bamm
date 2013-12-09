@@ -1,12 +1,3 @@
-/*
- *  TraitMCMC.h
- *  BAMMt
- *
- *  Created by Dan Rabosky on 6/20/12.
-
- *
- */
-
 #ifndef TRAIT_MCMC_H
 #define TRAIT_MCMC_H
 
