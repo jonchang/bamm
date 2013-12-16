@@ -1,5 +1,6 @@
 #ifndef BRANCH_EVENT_H
 #define BRANCH_EVENT_H
+
 #include "Log.h"
 
 class Tree;

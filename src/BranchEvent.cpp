@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 
 #include "BranchEvent.h"
 #include "Node.h"
