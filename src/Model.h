@@ -68,8 +68,8 @@ public:
 
     void getEventDataString(std::stringstream& ss);
 
-    double getModelTemperatureMH(void);
-    void setModelTemperatureMH(double x);
+    double getTemperatureMH(void);
+    void setTemperatureMH(double x);
     
 protected:
 
@@ -260,7 +260,8 @@ inline double Model::getCurrentLogLikelihood()
     return _logLikelihood;
 }
 
-inline double Model::getModelTemperatureMH()
+
+inline double Model::getTemperatureMH()
 {
     return _temperatureMH;
 }

@@ -34,6 +34,7 @@ SET(BAMM_SRC
     src/Log.cpp
     src/MCMC.cpp
     src/MbRandom.cpp
+    src/MetropolisCoupledMCMC.cpp
     src/Model.cpp
     src/Node.cpp
     src/Prior.cpp

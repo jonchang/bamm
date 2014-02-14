@@ -43,7 +43,7 @@ Model::Model(MbRandom* rng, Tree* tree, Settings* settings, Prior* prior) :
 
     // Initial setting for temperature = 1.0
     // This must be explicitly set by calling the public
-    // function Model::setModelTemperature
+    // function Model::setTemperatureMH
      
     _temperatureMH = 1.0;
 }
@@ -768,13 +768,13 @@ double Model::safeExponentiation(double x)
 }
 
 
-void Model::setModelTemperatureMH(double x)
+void Model::setTemperatureMH(double x)
 {
     if ((x >= 0) && (x <= 1.0)) {
         _temperatureMH = x;
     } else {
         log(Error) << "Attempt to set invalid temperature in "
-            << "Model::setModelTemperature: " << x << "\n";
+            << "Model::setTemperature: " << x << "\n";
         std::exit(1);
     }
 }

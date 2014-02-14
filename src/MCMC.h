@@ -21,6 +21,8 @@ public:
 
     void run();
 
+    Model* getModel();
+
 protected:
 
     void setUpdateWeights();
@@ -64,6 +66,12 @@ protected:
     int _eventDataOutputFreq;
     int _stdOutFreq;
 };
+
+
+inline Model* MCMC::getModel()
+{
+    return _model;
+}
 
 
 #endif
