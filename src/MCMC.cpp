@@ -14,20 +14,9 @@
 MCMC::MCMC(MbRandom* rng, Model* model, Settings* settings) :
     _rng(rng), _model(model), _settings(settings)
 {
-    _numGenerations = _settings->getNGENS();
-
-    // Output file names
-    _mcmcOutputFileName      = _settings->getMCMCoutfile();
-    _eventDataOutputFileName = _settings->getEventDataOutfile();
-
-    // Output frequencies
-    _mcmcOutputFreq      = _settings->getMCMCwriteFreq();
-    _eventDataOutputFreq = _settings->getEventDataWriteFreq();
-    _stdOutFreq          = _settings->getPrintFreq();
-
-    // Open streams for writing
-    _mcmcOutputStream.open(_mcmcOutputFileName.c_str());
-    _eventDataOutputStream.open(_eventDataOutputFileName.c_str());
+    for (int i = 0; i < _settings->getInitialNumberEvents(); i++) {
+        _model->addEventToTree();
+    }
 }
 
 
@@ -42,11 +31,6 @@ void MCMC::run()
 {
     setUpdateWeights();
     _model->resetGeneration(); // TODO: Really needed?
-
-    // TODO: Might be better to put this in model initialization
-    for (int i = 0; i < _settings->getInitialNumberEvents(); i++) {
-        _model->addEventToTree();
-    }
 
     log() << "\nRunning MCMC chain for "
           << _numGenerations << " generations.\n";

@@ -13,12 +13,35 @@ MetropolisCoupledMCMC::MetropolisCoupledMCMC(MbRandom* rng, Settings* settings,
         : _rng(rng), _settings(settings), _tree(tree), _prior(prior),
             _deltaT(deltaT), _swapPeriod(swapPeriod)
 {
+    // Total number of steps/generations to run chains
     _nGenerations = _settings->getNGENS();
+
+    // MCMC-related output
+    _mcmcOutputFileName = _settings->getMCMCoutfile();
+    _mcmcOutputFreq = _settings->getMCMCwriteFreq();
+
+    // Event-related output
+    _eventDataOutputFileName = _settings->getEventDataOutfile();
+    _eventDataOutputFreq = _settings->getEventDataWriteFreq();
+
+    // Output to the screen (stdandard output)
+    _stdOutFreq = _settings->getPrintFreq();
+
+    // Open streams for writing
+    _mcmcOutputStream.open(_mcmcOutputFileName.c_str());
+    _eventDataOutputStream.open(_eventDataOutputFileName.c_str());
 
     // Create chains (the 0th chain is assumed to be the cold chain)
     for (int i = 0; i < nChains; i++) {
         _chains.push_back(createMCMC(i));
     }
+}
+
+
+MetropolisCoupledMCMC::~MetropolisCoupledMCMC()
+{
+    _mcmcOutputStream.close();
+    _eventDataOutputStream.close();
 }
 
 
@@ -57,6 +80,11 @@ MetropolisCoupledMCMC::~MetropolisCoupledMCMC()
 
 void MetropolisCoupledMCMC::run()
 {
+    log() << "\nRunning " << _chains.size() << " chains for "
+          << _nGenerations << " generations.\n\n";
+
+    outputHeaders();
+
     for (int gen = 0; gen < _nGenerations; gen += _swapPeriod) {
         // Run each chain up to _swapPeriod steps
         for (int i = 0; i < (int)_chains.size(); i++) {
@@ -70,6 +98,28 @@ void MetropolisCoupledMCMC::run()
             swapTemperature(chainToSwap);
         }
     }
+}
+
+
+void MetropolisCoupledMCMC::outputHeaders()
+{
+    outputMCMCHeaders();
+    outputEventDataHeaders();
+    outputStdOutHeaders();
+}
+
+
+void MetropolisCoupledMCMC::outputMCMCHeaders()
+{
+    _mcmcOutputStream << "chain,generation,N_shifts,logPrior,logLik,"
+        << "eventRate,acceptRate\n";
+}
+
+
+void MetropolisCoupledMCMC::outputEventDataHeaders()
+{
+    _eventDataOutputStream << "generation,leftchild,rightchild,abstime";
+    outputSpecificEventDataHeaders();
 }
 
 
