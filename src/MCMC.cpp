@@ -17,6 +17,8 @@ MCMC::MCMC(MbRandom* rng, Model* model, Settings* settings) :
     for (int i = 0; i < _settings->getInitialNumberEvents(); i++) {
         _model->addEventToTree();
     }
+
+    setUpdateWeights();
 }
 
 
@@ -29,9 +31,6 @@ MCMC::~MCMC()
 
 void MCMC::run()
 {
-    setUpdateWeights();
-    _model->resetGeneration(); // TODO: Really needed?
-
     log() << "\nRunning MCMC chain for "
           << _numGenerations << " generations.\n";
 
