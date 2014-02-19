@@ -18,7 +18,7 @@ class SpExMCMC : public MCMC
 
 public:
 
-    SpExMCMC(MbRandom* rng, Model* model, Settings* settings);
+    SpExMCMC(MbRandom* rng, Model* model, Settings* settings, int chain);
     virtual ~SpExMCMC();
 
 private:

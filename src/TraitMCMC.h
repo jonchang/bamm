@@ -18,7 +18,7 @@ class TraitMCMC : public MCMC
 
 public:
 
-    TraitMCMC(MbRandom* rng, Model* model, Settings* settings);
+    TraitMCMC(MbRandom* rng, Model* model, Settings* settings, int chain);
     virtual ~TraitMCMC();
 
 private:

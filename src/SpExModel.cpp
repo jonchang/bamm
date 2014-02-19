@@ -43,9 +43,11 @@
 #define JUMP_VARIANCE_NORMAL 0.05
 
 
-SpExModel::SpExModel(MbRandom* ranptr, Tree* tp, Settings* sp, Prior* pr) :
-    Model(ranptr, tp, sp, pr)
+SpExModel::SpExModel(MbRandom* ranptr, Settings* sp, Prior* pr) :
+    Model(ranptr, sp, pr)
 {
+    Model::finishConstruction();
+
     // Initialize MCMC proposal/tuning parameters
     _updateLambdaInitScale = _settings->getUpdateLambdaInitScale();
     _updateMuInitScale = _settings->getUpdateMuInitScale();
@@ -95,6 +97,22 @@ SpExModel::SpExModel(MbRandom* ranptr, Tree* tp, Settings* sp, Prior* pr) :
     log() << "\nInitial log-likelihood: " << getCurrentLogLikelihood() << "\n";
     if (_settings->getSampleFromPriorOnly())
         log() << "Note that you have chosen to sample from prior only.\n";
+}
+
+
+void SpExModel::initializeTree()
+{
+    if (_settings->getUseGlobalSamplingProbability()) {
+        _tree->initializeSpeciationExtinctionModel
+            (_settings->getGlobalSamplingFraction());
+    } else {
+        _tree->initializeSpeciationExtinctionModel
+            (_settings->getSampleProbsFilename());
+    }
+
+    _tree->setCanNodeHoldEventByDescCount
+        (_settings->getMinCladeSizeForShift());
+    _tree->setTreeMap(_tree->getRoot());
 }
 
 

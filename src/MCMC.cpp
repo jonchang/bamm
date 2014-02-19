@@ -9,16 +9,40 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
+#include <string>
 
 
-MCMC::MCMC(MbRandom* rng, Model* model, Settings* settings) :
-    _rng(rng), _model(model), _settings(settings)
+MCMC::MCMC(MbRandom* rng, Model* model, Settings* settings, int chain = 0) :
+    _rng(rng), _model(model), _settings(settings), _chain(chain)
 {
+    // MCMC-related output
+    _mcmcOutputFileName = _settings->getMCMCoutfile();
+    _mcmcOutputFreq = _settings->getMCMCwriteFreq();
+
+    // Event-related output
+    _eventDataOutputFileName = _settings->getEventDataOutfile();
+    _eventDataOutputFreq = _settings->getEventDataWriteFreq();
+
+    // Append the chain number (if > 0) to the output file names
+    if (_chain > 0) {
+        _mcmcOutputFileName += ("-" + std::to_string(chain));
+        _eventDataOutputFileName += ("-" + std::to_string(chain));
+    }
+
+    // Open streams for output
+    _mcmcOutputStream.open(_mcmcOutputFileName.c_str());
+    _eventDataOutputStream.open(_eventDataOutputFileName.c_str());
+
     for (int i = 0; i < _settings->getInitialNumberEvents(); i++) {
         _model->addEventToTree();
     }
+}
 
+
+void MCMC::finishConstruction()
+{
     setUpdateWeights();
+    outputHeaders();
 }
 
 
@@ -29,17 +53,10 @@ MCMC::~MCMC()
 }
 
 
-void MCMC::run()
+void MCMC::run(int nGenerations)
 {
-    log() << "\nRunning MCMC chain for "
-          << _numGenerations << " generations.\n";
-
-    log() << "\n";
-    outputHeaders();
-
-    int parameterToUpdate = 0;
-    for (int gen = 0; gen < _numGenerations; gen++) {
-        parameterToUpdate = chooseRandomParameter();
+    for (int gen = 0; gen < nGenerations; gen++) {
+        int parameterToUpdate = chooseRandomParameter();
         updateState(parameterToUpdate);
         outputData(gen);
     }
@@ -132,7 +149,6 @@ void MCMC::outputHeaders()
 {
     outputMCMCHeaders();
     outputEventDataHeaders();
-    outputStdOutHeaders();
 }
 
 
@@ -150,16 +166,6 @@ void MCMC::outputEventDataHeaders()
 }
 
 
-void MCMC::outputStdOutHeaders()
-{
-    log() << std::setw(15) << "Generation"
-          << std::setw(15) << "LogLikelihood"
-          << std::setw(15) << "NumShifts"
-          << std::setw(15) << "LogPrior"
-          << std::setw(15) << "AcceptRate" << "\n";
-}
-
-
 void MCMC::outputData(int generation)
 {
     if (generation % _mcmcOutputFreq == 0) {
@@ -168,14 +174,6 @@ void MCMC::outputData(int generation)
 
     if (generation % _eventDataOutputFreq == 0) {
         outputEventData();
-    }
-
-    if (generation % _stdOutFreq == 0) {
-        outputStdOutData();
-
-        // Reset acceptance rates when state data are printed to the screen.
-        // This could lead to NANs if outputEventData() is called after this.
-        _model->resetMHAcceptanceParameters();
     }
 
     // Defined in concrete subclass
@@ -192,6 +190,7 @@ void MCMC::outputMCMCData()
                       << _model->getEventRate()             << ","
                       << _model->getMHAcceptanceRate()
                       << std::endl;
+    _model->resetMHAcceptanceParameters();
 }
 
 
@@ -201,15 +200,4 @@ void MCMC::outputEventData()
     std::stringstream eventData;
     _model->getEventDataString(eventData);
     _eventDataOutputStream << eventData.str() << std::endl;
-}
-
-
-void MCMC::outputStdOutData()
-{
-    log() << std::setw(15) << _model->getGeneration()
-          << std::setw(15) << _model->getCurrentLogLikelihood()
-          << std::setw(15) << _model->getNumberOfEvents()
-          << std::setw(15) << _model->computeLogPrior()
-          << std::setw(15) << _model->getMHAcceptanceRate()
-          << std::endl;
 }

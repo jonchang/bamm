@@ -14,8 +14,8 @@
 #include <cstdlib>
 
 
-TraitMCMC::TraitMCMC(MbRandom* rng, Model* model, Settings* settings) :
-    MCMC(rng, model, settings)
+TraitMCMC::TraitMCMC(MbRandom* rng, Model* model, Settings* settings,
+    int chain = 0) : MCMC(rng, model, settings, chain)
 {
     _specificModel = static_cast<TraitModel*>(model);
 
@@ -27,6 +27,9 @@ TraitMCMC::TraitMCMC(MbRandom* rng, Model* model, Settings* settings) :
     if (_writeMeanBranchLengthTrees) {
         _betaOutputStream.open(_betaOutputFileName.c_str());
     }
+
+    // See SpExMCMC for why this call is needed here
+    MCMC::finishConstruction();
 }
 
 

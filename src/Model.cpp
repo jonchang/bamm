@@ -13,13 +13,17 @@
 #include <cstdlib>
 
 
-Model::Model(MbRandom* rng, Tree* tree, Settings* settings, Prior* prior) :
-    _rng(rng), _tree(tree), _settings(settings), _prior(prior), _gen(0)
+Model::Model(MbRandom* rng, Settings* settings, Prior* prior) :
+    _rng(rng), _settings(settings), _prior(prior), _gen(0)
 {
     // Reduce weird autocorrelation of values at start by calling RNG
     // a few times. TODO: Why is there a weird autocorrelation?
     for (int i = 0; i < 100; i++)
         _rng->uniformRv();
+
+    // Read and create tree object
+    std::string treeFileName = _settings->getTreeFilename();
+    _tree = new Tree(treeFileName, _rng);
 
     // Event location scale is relative to the maximum root-to-tip length
     _scale = _settings->getUpdateEventLocationScale() *
@@ -55,6 +59,15 @@ Model::~Model()
     for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it) {
         delete *it;
     }
+
+    delete _tree;
+}
+
+
+void Model::finishConstruction()
+{
+    // Implemented by derived class
+    initializeTree();
 }
 
 

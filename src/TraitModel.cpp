@@ -31,9 +31,11 @@
 #include "Stat.h"
 
 
-TraitModel::TraitModel(MbRandom* rng, Tree* tree, Settings* settings,
-    Prior* prior) : Model(rng, tree, settings, prior)
+TraitModel::TraitModel(MbRandom* rng, Settings* settings, Prior* prior)
+    : Model(rng, settings, prior)
 {
+    Model::finishConstruction();
+
     _updateBetaScale = _settings->getUpdateBetaScale();
     _updateBetaShiftScale = _settings->getUpdateBetaShiftScale();
 
@@ -86,6 +88,15 @@ TraitModel::TraitModel(MbRandom* rng, Tree* tree, Settings* settings,
     if (_settings->getSampleFromPriorOnly()) {
         log() << "Note that you have chosen to sample from prior only.\n";
     }
+}
+
+
+void TraitModel::initializeTree()
+{
+    _tree->setAllNodesCanHoldEvent();
+    _tree->setTreeMap(_tree->getRoot());
+    _tree->getPhenotypesMissingLatent(_settings->getTraitFile());
+    _tree->initializeTraitValues();
 }
 
 

@@ -5,12 +5,11 @@
 #include <ctime>
 #include <cstdlib>
 
-#include "Tree.h"
 #include "Node.h"
 #include "MbRandom.h"
 #include "SpExModel.h"
-#include "SpExMCMC.h"
-#include "TraitMCMC.h"
+#include "SpExMetropolisCoupledMCMC.h"
+#include "TraitMetropolisCoupledMCMC.h"
 #include "Settings.h"
 #include "TraitModel.h"
 #include "Autotune.h"
@@ -109,30 +108,14 @@ int main (int argc, char* argv[])
 
         mySettings.printCurrentSettings(runInfoFile);
 
-        std::string treefile = mySettings.getTreeFilename();
-        Tree intree(treefile, &myRNG);
-
-        if (mySettings.getUseGlobalSamplingProbability()) {
-            intree.initializeSpeciationExtinctionModel
-                (mySettings.getGlobalSamplingFraction());
-        } else {
-            // TODO: Code should be supported for this but need to check
-            intree.initializeSpeciationExtinctionModel
-                (mySettings.getSampleProbsFilename());
-        }
-        
-        intree.setCanNodeHoldEventByDescCount
-            (mySettings.getMinCladeSizeForShift());
-        intree.setTreeMap(intree.getRoot());
-
         if (mySettings.getInitializeModel() && !mySettings.getRunMCMC()) {
-            SpExModel myModel(&myRNG, &intree, &mySettings, &myPrior);
+            SpExModel myModel(&myRNG, &mySettings, &myPrior);
         } else if (mySettings.getInitializeModel() && mySettings.getAutotune()){
-            SpExModel myModel(&myRNG, &intree, &mySettings, &myPrior);
+            SpExModel myModel(&myRNG, &mySettings, &myPrior);
             Autotune myTuneObject(&myRNG, &myModel, &mySettings);
         } else if (mySettings.getInitializeModel() && mySettings.getRunMCMC()) {
-            SpExModel myModel(&myRNG, &intree, &mySettings, &myPrior);
-            SpExMCMC myMCMC(&myRNG, &myModel, &mySettings);
+            SpExMetropolisCoupledMCMC myMCMC
+                (&myRNG, &mySettings, &myPrior, 4, 0.5, 1000);
             myMCMC.run();
         } else {
             log(Error) << "Unsupported option in main.\n";
@@ -146,21 +129,12 @@ int main (int argc, char* argv[])
         
         mySettings.printCurrentSettings(runInfoFile);
 
-        std::string treefile = mySettings.getTreeFilename();
-        Tree intree(treefile, &myRNG);
-
-        intree.setAllNodesCanHoldEvent();
-        intree.setTreeMap(intree.getRoot());
-
-        intree.getPhenotypesMissingLatent(mySettings.getTraitFile());
-        intree.initializeTraitValues();
-        
         if (mySettings.getInitializeModel() && !mySettings.getRunMCMC()) {
-            TraitModel myModel(&myRNG, &intree, &mySettings, &myPrior);
+            TraitModel myModel(&myRNG, &mySettings, &myPrior);
         } else if (mySettings.getInitializeModel() && mySettings.getRunMCMC() &&
                 !mySettings.getAutotune()) {
-            TraitModel myModel(&myRNG, &intree, &mySettings, &myPrior);
-            TraitMCMC myMCMC(&myRNG, &myModel, &mySettings);
+            TraitMetropolisCoupledMCMC myMCMC
+                (&myRNG, &mySettings, &myPrior, 4, 0.5, 1000);
             myMCMC.run();
         } else if (mySettings.getInitializeModel() && mySettings.getAutotune()){
             log(Error) << "Autotune option not yet supported for phenotypic "

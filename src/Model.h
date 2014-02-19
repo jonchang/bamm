@@ -21,7 +21,7 @@ public:
 
     typedef std::set<BranchEvent*, BranchEvent::PtrCompare> EventSet;
 
-    Model(MbRandom* rng, Tree* tree, Settings* settings, Prior* prior);
+    Model(MbRandom* rng, Settings* settings, Prior* prior);
     virtual ~Model();
 
     Tree* getTreePtr();
@@ -73,6 +73,8 @@ public:
     
 protected:
 
+    void finishConstruction();
+
     BranchEvent* chooseEventAtRandom();
 
     void addEventMH();
@@ -104,6 +106,8 @@ protected:
     double safeExponentiation(double x);
 
     // Pure virtual methods to be implemented by derived classes
+
+    virtual void initializeTree() = 0;
 
     virtual void readModelSpecificParameters(std::ifstream& inputFile) = 0;
     virtual void setRootEventWithReadParameters() = 0;

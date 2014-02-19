@@ -8,7 +8,6 @@
 
 class MbRandom;
 class Settings;
-class Tree;
 class MCMC;
 class Model;
 
@@ -17,33 +16,42 @@ class SpExMetropolisCoupledMCMC : public MetropolisCoupledMCMC
 {
 public:
 
-    SpExMetropolisCoupledMCMC(MbRandom* rng, Settings* settings, Tree* tree,
+    SpExMetropolisCoupledMCMC(MbRandom* rng, Settings* settings,
         Prior* prior, int nChains, double deltaT, int swapPeriod);
 
 protected:
 
-    virtual MCMC* createSpecificMCMC(Model* model) const;
+    virtual MCMC* createSpecificMCMC(int chainIndex, Model* model) const;
     virtual Model* createSpecificModel() const;
+
+    virtual void outputSpecificEventDataHeaders();
 };
 
 
 SpExMetropolisCoupledMCMC::SpExMetropolisCoupledMCMC(MbRandom* rng,
-    Settings* settings, Tree* tree, Prior* prior, int nChains, double deltaT,
-        int swapPeriod) : MetropolisCoupledMCMC(rng, settings, tree, prior,
+    Settings* settings, Prior* prior, int nChains, double deltaT,
+        int swapPeriod) : MetropolisCoupledMCMC(rng, settings, prior,
             nChains, deltaT, swapPeriod)
 {
 }
 
 
-inline MCMC* SpExMetropolisCoupledMCMC::createSpecificMCMC(Model* model) const
+inline MCMC* SpExMetropolisCoupledMCMC::createSpecificMCMC
+    (int chainIndex, Model* model) const
 {
-    return new SpExMCMC(_rng, model, _settings);
+    return new SpExMCMC(_rng, model, _settings, chainIndex + 1);
 }
 
 
 inline Model* SpExMetropolisCoupledMCMC::createSpecificModel() const
 {
-    return new SpExModel(_rng, _tree, _settings, _prior);
+    return new SpExModel(_rng, _settings, _prior);
+}
+
+
+inline void SpExMetropolisCoupledMCMC::outputSpecificEventDataHeaders()
+{
+    _eventDataOutputStream << ",lambdainit,lambdashift,muinit,mushift\n";
 }
 
 

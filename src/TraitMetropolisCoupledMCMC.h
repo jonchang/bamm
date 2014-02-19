@@ -8,7 +8,6 @@
 
 class MbRandom;
 class Settings;
-class Tree;
 class MCMC;
 class Model;
 
@@ -17,33 +16,42 @@ class TraitMetropolisCoupledMCMC : public MetropolisCoupledMCMC
 {
 public:
 
-    TraitMetropolisCoupledMCMC(MbRandom* rng, Settings* settings, Tree* tree,
+    TraitMetropolisCoupledMCMC(MbRandom* rng, Settings* settings,
         Prior* prior, int nChains, double deltaT, int swapPeriod);
 
 protected:
 
-    virtual MCMC* createSpecificMCMC(Model* model) const;
+    virtual MCMC* createSpecificMCMC(int chainIndex, Model* model) const;
     virtual Model* createSpecificModel() const;
+
+    virtual void outputSpecificEventDataHeaders();
 };
 
 
 TraitMetropolisCoupledMCMC::TraitMetropolisCoupledMCMC(MbRandom* rng,
-    Settings* settings, Tree* tree, Prior* prior, int nChains, double deltaT,
-        int swapPeriod) : MetropolisCoupledMCMC(rng, settings, tree, prior,
+    Settings* settings, Prior* prior, int nChains, double deltaT,
+        int swapPeriod) : MetropolisCoupledMCMC(rng, settings, prior,
             nChains, deltaT, swapPeriod)
 {
 }
 
 
-inline MCMC* TraitMetropolisCoupledMCMC::createSpecificMCMC(Model* model) const
+inline MCMC* TraitMetropolisCoupledMCMC::createSpecificMCMC
+    (int chainIndex, Model* model) const
 {
-    return new TraitMCMC(_rng, model, _settings);
+    return new TraitMCMC(_rng, model, _settings, chainIndex + 1);
 }
 
 
 inline Model* TraitMetropolisCoupledMCMC::createSpecificModel() const
 {
-    return new TraitModel(_rng, _tree, _settings, _prior);
+    return new TraitModel(_rng, _settings, _prior);
+}
+
+
+inline void TraitMetropolisCoupledMCMC::outputSpecificEventDataHeaders()
+{
+    _eventDataOutputStream << ",betainit,betashift\n";
 }
 
 

@@ -16,14 +16,16 @@ class MCMC
 
 public:
 
-    MCMC(MbRandom* rng, Model* model, Settings* settings);
+    MCMC(MbRandom* rng, Model* model, Settings* settings, int chain);
     virtual ~MCMC();
 
-    void run();
+    void run(int nGenerations);
 
     Model* getModel();
 
 protected:
+
+    void finishConstruction();
 
     void setUpdateWeights();
     void setUpParameterWeights();
@@ -48,6 +50,7 @@ protected:
     MbRandom* _rng;
     Model* _model;
     Settings* _settings;
+    int _chain;
 
     int _numGenerations;
 

@@ -13,8 +13,8 @@
 #include <cstdlib>
 
 
-SpExMCMC::SpExMCMC(MbRandom* rng, Model* model, Settings* settings) :
-    MCMC(rng, model, settings)
+SpExMCMC::SpExMCMC(MbRandom* rng, Model* model, Settings* settings,
+    int chain = 0) : MCMC(rng, model, settings, chain)
 {
     _specificModel = static_cast<SpExModel*>(model);
 
@@ -30,6 +30,14 @@ SpExMCMC::SpExMCMC(MbRandom* rng, Model* model, Settings* settings) :
         _lambdaOutputStream.open(_lambdaOutputFileName.c_str());
         _muOutputStream.open(_muOutputFileName.c_str());
     }
+
+    // I would like the parent constructor to call derived methods to
+    // initialize the derived object, but derived methods can't be called from
+    // the parent's constructor because the derived object has not been built
+    // while in the parent's constructor. One solution is to wait until the
+    // derived object has been built, and then call a parent method that then
+    // finishes construction of the derived object.
+    MCMC::finishConstruction();
 }
 
 
