@@ -119,8 +119,8 @@ void MetropolisCoupledMCMC::outputHeaders()
 
 void MetropolisCoupledMCMC::outputMCMCHeaders()
 {
-    _mcmcOutputStream << "cold_chain,chain,generation,N_shifts,logPrior,logLik,"
-        << "eventRate,acceptRate\n";
+    _mcmcOutputStream << "cold_chain,chain,temp,generation,N_shifts,"
+        << "logPrior,logLik,eventRate,acceptRate\n";
 }
 
 
@@ -133,7 +133,7 @@ void MetropolisCoupledMCMC::outputEventDataHeaders()
 
 void MetropolisCoupledMCMC::outputStdOutHeaders()
 {
-    log() << "cold_chain,chain,generation,N_shifts,logPrior,logLik,"
+    log() << "cold_chain,chain,temp,generation,N_shifts,logPrior,logLik,"
           << "eventRate,acceptRate\n";
 }
 
@@ -222,6 +222,7 @@ void MetropolisCoupledMCMC::outputMCMCData()
         Model* model = _chains[i]->getModel();
         _mcmcOutputStream << _coldChainIndex + 1 << ","
             << (i + 1)                           << ","
+            << model->getTemperatureMH()         << ","
             << model->getGeneration()            << ","
             << model->getNumberOfEvents()        << ","
             << model->computeLogPrior()          << ","
@@ -248,6 +249,7 @@ void MetropolisCoupledMCMC::outputStdOutData()
         Model* model = _chains[i]->getModel();
         log() << _coldChainIndex + 1 << ","
             << (i + 1)                           << ","
+            << model->getTemperatureMH()         << ","
             << model->getGeneration()            << ","
             << model->getNumberOfEvents()        << ","
             << model->computeLogPrior()          << ","
