@@ -5,8 +5,66 @@ SET(BAMM_VERSION 2.3.0)
 SET(BAMM_VERSION_DATE 2015-03-09)
 
 # Specify executable and source files
-AUX_SOURCE_DIRECTORY(src BAMM_SRC)
-ADD_EXECUTABLE(bamm ${BAMM_SRC})
+SET(CPP_LIB
+    src/AcceptanceDataWriter.cpp
+    src/BetaInitProposal.cpp
+    src/BetaShiftProposal.cpp
+    src/BetaTimeModeProposal.cpp
+    src/BranchEvent.cpp
+    src/BranchHistory.cpp
+    src/ChainSwapDataWriter.cpp
+    src/CommandLineProcessor.cpp
+    src/EventCountLog.cpp
+    src/EventDataWriter.cpp
+    src/EventNumberForBranchProposal.cpp
+    src/EventNumberProposal.cpp
+    src/EventParameterProposal.cpp
+    src/EventRateProposal.cpp
+    src/FastSimulatePrior.cpp
+    src/LambdaInitProposal.cpp
+    src/LambdaShiftProposal.cpp
+    src/LambdaTimeModeProposal.cpp
+    src/Log.cpp
+    src/MCMC.cpp
+    src/MCMCDataWriter.cpp
+    src/MbRandom.cpp
+    src/MetropolisCoupledMCMC.cpp
+    src/Model.cpp
+    src/ModelDataWriter.cpp
+    src/MoveEventProposal.cpp
+    src/MuInitProposal.cpp
+    src/MuShiftProposal.cpp
+    src/NewickTreeReader.cpp
+    src/Node.cpp
+    src/NodeStateDataWriter.cpp
+    src/NodeStateProposal.cpp
+    src/PreservationRateProposal.cpp
+    src/Prior.cpp
+    src/Proposal.cpp
+    src/Random.cpp
+    src/Settings.cpp
+    src/SettingsParameter.cpp
+    src/SpExBranchEvent.cpp
+    src/SpExDataWriter.cpp
+    src/SpExEventDataWriter.cpp
+    src/SpExModel.cpp
+    src/Stat.cpp
+    src/StdOutDataWriter.cpp
+    src/TimeModeProposal.cpp
+    src/Tools.cpp
+    src/TraitBranchEvent.cpp
+    src/TraitDataWriter.cpp
+    src/TraitEventDataWriter.cpp
+    src/TraitModel.cpp
+    src/Tree.cpp
+)
+
+ADD_LIBRARY(objlib OBJECT ${CPP_LIB})
+set_property(TARGET ${objlib} PROPERTY POSITION_INDEPENDENT_CODE 1)
+add_library(bamm_shared SHARED $<TARGET_OBJECTS:objlib>)
+add_library(bamm_static STATIC $<TARGET_OBJECTS:objlib>)
+ADD_EXECUTABLE(bamm src/main.cpp)
+target_link_libraries(bamm bamm_static)
 
 # Specify flags according to compiler
 IF(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
