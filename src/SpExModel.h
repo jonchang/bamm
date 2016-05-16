@@ -45,6 +45,8 @@ public:
     // Debugging likelihood function:
     void   printNodeProbs();
 
+    virtual void checkModel();
+
 private:
 
     virtual void setRootEventWithReadParameters
@@ -62,6 +64,7 @@ private:
     virtual BranchEvent* newBranchEventFromLastDeletedEvent();
 
     virtual void setMeanBranchParameters();
+    virtual void setMeanBranchParameters(Node* x);
     virtual void setDeletedEventParameters(BranchEvent* be);
 
     double computeSpExProbBranch(Node* node);

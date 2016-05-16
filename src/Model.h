@@ -82,6 +82,10 @@ public:
     BranchEvent* removeRandomEventFromTree();
 
     virtual void setMeanBranchParameters() = 0;
+    virtual void setMeanBranchParameters(Node* x) = 0;
+
+
+    virtual void checkModel() = 0;
 
     double getTemperatureMH();
     void setTemperatureMH(double x);

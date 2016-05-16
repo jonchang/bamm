@@ -18,7 +18,8 @@ BetaShiftProposal::BetaShiftProposal
 
 double BetaShiftProposal::acceptanceRatio()
 {
-    if (static_cast<TraitBranchEvent*>(_event)->isTimeVariable()) {
+    if (static_cast<TraitBranchEvent*>(_event)->isTimeVariable() &
+            (static_cast<TraitBranchEvent*>(_event)->isJump() == false) ) {
         return EventParameterProposal::acceptanceRatio();
     } else {
         return 0.0;

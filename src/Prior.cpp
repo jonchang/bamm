@@ -34,7 +34,6 @@ Prior::Prior(Random& random, Settings* settings) : _random(random)
         _preservationRatePrior = settings->get<double>("preservationRatePrior");
         
         
-        
     } else if (modelType == "trait") {
         _betaInit = settings->get<double>("betaInit");
         _betaShiftInit = settings->get<double>("betaShiftInit");
@@ -46,6 +45,16 @@ Prior::Prior(Random& random, Settings* settings) : _random(random)
             settings->get<double>("betaIsTimeVariablePrior");
         _updateRateBeta0 = settings->get<double>("updateRateBeta0");
         _updateRateBetaShift = settings->get<double>("updateRateBetaShift");
+
+        // JUMP priors
+        _jumpPrior = settings->get<double>("jumpPrior");
+        
+        _updateRateJump = settings->get<double>("updateRateJump");
+        _isEventJumpPrior = settings->get<double>("isEventJumpPrior");
+
+        _updateRateJumpVariance = settings->get<double>("updateRateJumpVariance");
+        //_jumpVarianceInit = settings->get<double>("jumpVarianceInit");
+        //_jumpVariancePrior = settings->get<double>("jumpVariancePrior");
     }
 
     _poissonRatePrior = settings->get<double>("poissonRatePrior");
@@ -299,3 +308,41 @@ double Prior::preservationRatePrior(double x)
     return 0.0;
 }
 
+
+bool Prior::generateIsEventJumpFromPrior()
+{
+    return _random.trueWithProbability(_isEventJumpPrior);
+}
+
+double Prior::jumpPrior(double x)
+{
+    return Stat::lnNormalPDF(x, 0.0, std::sqrt(_jumpPrior));
+}
+
+
+double Prior::generateJumpFromPrior()
+{
+    return _random.normal(0.0, std::sqrt(_jumpPrior));
+}
+
+double Prior::isEventJumpPrior()
+{
+    return _isEventJumpPrior;
+}
+
+
+/*
+double Prior::jumpVariancePrior(double x)
+{
+    return Stat::lnExponentialPDF(x, _jumpVariancePrior);
+}
+
+double Prior::generateJumpVarianceFromPrior()
+{
+    if (_updateRateJumpVariance <= _UPDATE_TOL){
+        return _jumpVarianceInit;
+    }else{
+        return _random.exponential(_jumpVariancePrior);
+    }
+}
+*/

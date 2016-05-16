@@ -15,6 +15,14 @@ BetaInitProposal::BetaInitProposal
     _updateBetaInitScale = _settings.get<double>("updateBetaInitScale");
 }
 
+double BetaInitProposal::acceptanceRatio()
+{
+    if ( static_cast<TraitBranchEvent*>(_event)->isJump() == false ) {
+        return EventParameterProposal::acceptanceRatio();
+    } else {
+        return 0.0;
+    }
+}
 
 double BetaInitProposal::getCurrentParameterValue()
 {

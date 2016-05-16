@@ -1,5 +1,5 @@
-#ifndef BETA_INIT_PROPOSAL_H
-#define BETA_INIT_PROPOSAL_H
+#ifndef JUMP_PROPOSAL_H
+#define JUMP_PROPOSAL_H
 
 
 #include "EventParameterProposal.h"
@@ -10,14 +10,15 @@ class Model;
 class Prior;
 
 
-class BetaInitProposal : public EventParameterProposal
+class JumpProposal : public EventParameterProposal
 {
 public:
 
-    BetaInitProposal(Random& random, Settings& settings, Model& model,
+    JumpProposal(Random& random, Settings& settings, Model& model,
         Prior& prior);
 
     virtual double acceptanceRatio();
+
 private:
 
     virtual double getCurrentParameterValue();
@@ -30,10 +31,8 @@ private:
 
     virtual double computeRootLogPriorRatio();
     virtual double computeNonRootLogPriorRatio();
-    virtual double computeLogQRatio();
 
-    double _updateBetaInitScale;
-    double _cterm;
+    double _updateJumpScale;
 };
 
 

@@ -25,6 +25,7 @@ std::string TraitEventDataWriter::eventParameters(BranchEvent* event)
 
     std::ostringstream stringStream;
     stringStream << specificEvent->getBetaInit()   << ","
-                 << specificEvent->getBetaShift();
+                 << specificEvent->getBetaShift()  << ","
+                 << specificEvent->getJump();
     return stringStream.str();
 }

@@ -9,7 +9,6 @@
 class Settings;
 class Model;
 
-
 class ModelDataWriter
 {
 public:

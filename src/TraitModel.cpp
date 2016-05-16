@@ -19,6 +19,10 @@
 #include "BetaShiftProposal.h"
 #include "BetaTimeModeProposal.h"
 #include "NodeStateProposal.h"
+#include "JumpProposal.h"
+
+//#include "JumpVarianceProposal.h"
+
 #include "Log.h"
 #include "Prior.h"
 #include "Stat.h"
@@ -47,7 +51,10 @@ TraitModel::TraitModel(Random& random, Settings& settings) :
 #endif
     
     _sampleFromPriorOnly = _settings.get<bool>("sampleFromPriorOnly");
-
+    
+    _jumpVariance = _settings.get<double>("jumpVariancePrior");
+    
+    
     double betaInit = _settings.get<double>("betaInit");
     double betaShiftInit = _settings.get<double>("betaShiftInit");
 
@@ -66,7 +73,7 @@ TraitModel::TraitModel(Random& random, Settings& settings) :
     }
 
     BranchEvent* x = new TraitBranchEvent(betaInit, betaShiftInit,
-        isTimeVariable, _tree->getRoot(), _tree, _random, 0);
+        isTimeVariable, false, 0.0, _tree->getRoot(), _tree, _random, 0);
     _rootEvent = x;
     _lastEventModified = x;
 
@@ -87,7 +94,6 @@ TraitModel::TraitModel(Random& random, Settings& settings) :
             addRandomEventToTree();
         }
     }
-
     setCurrentLogLikelihood(computeLogLikelihood());
 
     // TODO: Code duplication with SpExModel
@@ -108,11 +114,12 @@ TraitModel::TraitModel(Random& random, Settings& settings) :
         (new BetaShiftProposal(random, settings, *this, _prior));
     _proposals.push_back(new NodeStateProposal(random, settings, *this));
     _proposals.push_back(new BetaTimeModeProposal(random, settings, *this));
-
- 
-    Model::calculateUpdateWeights();
- 
+    _proposals.push_back(new JumpProposal(random, settings, *this, _prior));
     
+    // Unimplemented hierarchical model
+    //_proposals.push_back(new JumpVarianceProposal(random, settings, *this, _prior));
+    
+    Model::calculateUpdateWeights();
 }
 
 
@@ -134,7 +141,8 @@ BranchEvent* TraitModel::newBranchEventWithReadParameters
 
     // TODO: Return true for now for time-variable
     return new TraitBranchEvent(betaInit, betaShift, true,
-            x, _tree, _random, time);
+                false, 0.0,
+                 x, _tree, _random, time);
 }
 
 
@@ -155,38 +163,84 @@ double TraitModel::betaShiftParameter
 
 void TraitModel::setMeanBranchParameters()
 {
+    // DEBUG
+    // std::cout << "TraitModel::setMeanBranchParams(): ROOT: \t" << _tree->getRoot()->getTraitValue() << std::endl;
     _tree->setMeanBranchTraitRates();
+
 }
+
+// update for single node only...
+void TraitModel::setMeanBranchParameters(Node* x)
+{
+    
+    _tree->computeMeanTraitRatesByNode(x);
+    
+}
+
 
 
 BranchEvent* TraitModel::newBranchEventWithRandomParameters(double x)
 {
-    // Sample beta and beta shift from prior
-    double newbeta = _prior.generateBetaInitFromPrior();
-    double newBetaShift = _prior.generateBetaShiftFromPrior();
-    bool newIsTimeVariable = _prior.generateBetaIsTimeVariableFromPrior();
+ 
+    // Sample whether event is jump from prior:
+    
+    bool isNewEventJump = _prior.generateIsEventJumpFromPrior();
 
-#ifdef NEGATIVE_SHIFT_PARAM
-    newBetaShift = -fabs(newBetaShift);
-    double dens_term = std::log(2.0);
-#else
-    double dens_term = 0.0;
-#endif
-
+    bool newIsTimeVariable = true;
+    
+    double newbeta = 0.0;
+    double newBetaShift = 0.0;
+    double newjump = 0.0;
+    
     _logQRatioJump = 0.0;
+    
+    if (isNewEventJump){
 
-    _logQRatioJump += _prior.betaInitPrior(newbeta);
-    if (newIsTimeVariable) {
-        _logQRatioJump += dens_term + _prior.betaShiftPrior(newBetaShift);
+        // for hierarchical model:
+        //newjump = _prior.generateJumpFromPrior(_jumpVariance);
+        //_logQRatioJump += _prior.jumpPrior(newjump, _jumpVariance);
+        
+        // For fixed jump variance
+        newjump = _prior.generateJumpFromPrior();
+        _logQRatioJump += _prior.jumpPrior(newjump);
+        
+    }else{
+ 
+        
+        // Sample beta and beta shift from prior
+        newbeta = _prior.generateBetaInitFromPrior();
+        newBetaShift = _prior.generateBetaShiftFromPrior();
+        newIsTimeVariable = _prior.generateBetaIsTimeVariableFromPrior();
+ 
+        
+#ifdef NEGATIVE_SHIFT_PARAM
+        newBetaShift = -fabs(newBetaShift);
+        double dens_term = std::log(2.0);
+#else
+        double dens_term = 0.0;
+#endif    
+        
+        _logQRatioJump += _prior.betaInitPrior(newbeta);
+        
+        if (newIsTimeVariable) {
+            _logQRatioJump += dens_term + _prior.betaShiftPrior(newBetaShift);
+        }
+        
     }
+ 
 
-    return new TraitBranchEvent(newbeta, newBetaShift, newIsTimeVariable,
-        _tree->mapEventToTree(x), _tree, _random, x);
+    BranchEvent* zz =  new TraitBranchEvent(newbeta, newBetaShift, newIsTimeVariable, isNewEventJump,
+                                          newjump, _tree->mapEventToTree(x), _tree, _random, x);
+   
+    
+    return zz;
 }
 
 
 // TODO: test this : has not been checked
 //     also not implemented in constructor for TraitModel yet
+
+// Should not need this for jump-type events.
 BranchEvent* TraitModel::newBranchEventWithParametersFromSettings(double x)
 {
     
@@ -213,6 +267,7 @@ BranchEvent* TraitModel::newBranchEventWithParametersFromSettings(double x)
     }
     
     return new TraitBranchEvent(newbeta, newBetaShift, newIsTimeVariable,
+                                false, 0.0,
                                 _tree->mapEventToTree(x), _tree, _random, x);
     
 }
@@ -226,6 +281,8 @@ void TraitModel::setDeletedEventParameters(BranchEvent* be)
     _lastDeletedEventBetaInit = event->getBetaInit();
     _lastDeletedEventBetaShift = event->getBetaShift();
     _lastDeletedEventTimeVariable = event->isTimeVariable();
+    _lastDeletedEventIsJump = event->isJump();
+    _lastDeletedEventJump = event->getJump();
 }
 
 
@@ -235,7 +292,17 @@ double TraitModel::calculateLogQRatioJump()
 
     _logQRatioJump = _prior.betaInitPrior(_lastDeletedEventBetaInit);
     _logQRatioJump += _prior.betaShiftPrior(_lastDeletedEventBetaShift);
-
+    if (_lastDeletedEventIsJump){
+        
+        // Hierarchical model (neeeds work)
+        //_logQRatioJump = _prior.jumpPrior(_lastDeletedEventJump, _jumpVariance);
+        
+        _logQRatioJump = _prior.jumpPrior(_lastDeletedEventJump);
+    }else{
+        _logQRatioJump = _prior.betaInitPrior(_lastDeletedEventBetaInit);
+        _logQRatioJump += _prior.betaShiftPrior(_lastDeletedEventBetaShift);
+   
+    }
     return _logQRatioJump;
 }
 
@@ -244,6 +311,7 @@ BranchEvent* TraitModel::newBranchEventFromLastDeletedEvent()
 {
     return new TraitBranchEvent(_lastDeletedEventBetaInit,
         _lastDeletedEventBetaShift, _lastDeletedEventTimeVariable,
+        _lastDeletedEventIsJump, _lastDeletedEventJump,
         _tree->mapEventToTree(_lastDeletedEventMapTime), _tree, _random,
         _lastDeletedEventMapTime);
 }
@@ -273,34 +341,28 @@ double TraitModel::computeLogLikelihood()
 
 
             double var = xnode->getBrlen() * xnode->getMeanBeta();
-
+            
+            // std::cout << xnode << "\tMeanBeta: " << xnode->getMeanBeta() << std::endl;
+            
             // change in phenotype:
             double delta = xnode->getTraitValue() - xnode->getAnc()->getTraitValue();
 
-            LnL += Stat::lnNormalPDF(delta, 0.0, std::sqrt(var));
-
-            //std::cout << xnode << "dz: " << delta << "\tT: " << xnode->getBrlen() << "\tRate: " << xnode->getMeanBeta();
-            //std::cout << "\tLf: " << _rng->lnNormalPdf(0, var, delta) << std::endl;
-
-            /*if (xnode == tmpnode){
-                std::cout << tmpnode->getTraitBranchHistory()->getAncestralNodeEvent()->getBetaInit();
-                std::cout << "\tDelta: " << delta << "\tvar: " << var << "\tLL: " << _rng->lnNormalPdf(0, var, delta);
-                std::cout << "\tBeta: " << xnode->getMeanBeta()  << std::endl;
-            }*/
+            // The expected change in phenotype based on the jump process:
+            double expectedDelta = xnode->getNetJump();
+            
+            LnL += Stat::lnNormalPDF(delta, expectedDelta, std::sqrt(var));
         }
 
     }
 
 #endif
-
     return LnL;
 
 }
 
 double TraitModel::computeTriadLikelihoodTraits(Node* x)
 {
-
-
+    // std::cout << "TraitModel::computeTriadLikelihoodTraits ROOT: \t" << _tree->getRoot()->getTraitValue() <<std::endl;
     if (_sampleFromPriorOnly)
         return 0.0;
 
@@ -319,18 +381,29 @@ double TraitModel::computeTriadLikelihoodTraits(Node* x)
 
         if (x->getLfDesc()->getCanHoldEvent() == true) {
             double delta = x->getLfDesc()->getTraitValue() - x->getTraitValue();
+            double expectedDelta = x->getLfDesc()->getNetJump();
+            
             double var = x->getLfDesc()->getBrlen() *
                 x->getLfDesc()->getMeanBeta();
-            logL += Stat::lnNormalPDF(delta, 0.0, std::sqrt(var));
+            
+            // std::cout << "Lf: delt/E[delt]/var :" << delta << "\t" << expectedDelta << "\t" << var << std::endl;
+            
+            logL += Stat::lnNormalPDF(delta, expectedDelta, std::sqrt(var));
         }
 
 
         if (x->getRtDesc()->getCanHoldEvent() == true) {
             // computation for right descendant branch
             double delta = x->getRtDesc()->getTraitValue() - x->getTraitValue();
+            double expectedDelta = x->getRtDesc()->getNetJump();
+            
             double var = x->getRtDesc()->getBrlen() *
                 x->getRtDesc()->getMeanBeta();
-            logL += Stat::lnNormalPDF(delta, 0.0, std::sqrt(var));
+            
+            // std::cout << "Rt: delt/E[delt]/var :" << delta << "\t" << expectedDelta << "\t" << var << std::endl;
+
+            
+            logL += Stat::lnNormalPDF(delta, expectedDelta, std::sqrt(var));
         }
 
 
@@ -339,14 +412,16 @@ double TraitModel::computeTriadLikelihoodTraits(Node* x)
         if (x != _tree->getRoot()) {
 
             double delta = x->getTraitValue() - x->getAnc()->getTraitValue();
+            double expectedDelta = x->getNetJump();
             double var = x->getBrlen() * x->getMeanBeta();
-            logL += Stat::lnNormalPDF(delta, 0.0, std::sqrt(var));
+            logL += Stat::lnNormalPDF(delta, expectedDelta, std::sqrt(var));
         }
     }
 
 #ifdef DEBUG
     std::cout << "Leaving computeTriadLikelihood: Node : " << x << std::endl;
 #endif
+    // std::cout << "TraitModel::computeTriadLikelihood: " << logL << std::endl;
 
     return logL;
 
@@ -375,18 +450,31 @@ double TraitModel::computeLogPrior()
 
         TraitBranchEvent* event = static_cast<TraitBranchEvent*>(*i);
 
-        logPrior += _prior.betaInitPrior(event->getBetaInit());
-        if (event->isTimeVariable()) {
-            logPrior += dens_term +
-                _prior.betaShiftPrior(event->getBetaShift());
+        if (event->isJump()){
+ 
+            logPrior += _prior.jumpPrior(event->getJump());
+            
+            // hierarchical
+            //logPrior += _prior.jumpPrior(event->getJump(), _jumpVariance);
+  
+            logPrior += std::log(_prior.isEventJumpPrior());
+            
+        }else{
+            logPrior += _prior.betaInitPrior(event->getBetaInit());
+            if (event->isTimeVariable()) {
+                logPrior += dens_term +
+                    _prior.betaShiftPrior(event->getBetaShift());
+            }
+            logPrior += std::log((1 - _prior.isEventJumpPrior() ) );
         }
-
     }
 
     // and prior on number of events:
 
     logPrior += _prior.poissonRatePrior(getEventRate());
 
+    // For unimplemented hierarchical model:
+    //logPrior += _prior.jumpVariancePrior(_jumpVariance);
     return logPrior;
 
 }
@@ -399,4 +487,74 @@ void TraitModel::getSpecificEventDataString
 
     ss << be->getBetaInit() << ","
     << be->getBetaShift();
+}
+
+
+
+
+void TraitModel::checkModel()
+{
+    std::cout << "Begin model check..." << std::endl;
+    
+    // Print Event Data
+    std::cout << "Event\tnode\ttime\tbetainit\tbetashift\tisjump\tjump" << std::endl;
+     
+    EventSet::iterator it;
+    for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it){
+        //bool isValidSingle = isEventConfigurationValid((*it));
+        
+        TraitBranchEvent* be = static_cast<TraitBranchEvent*>((*it));
+        
+        std::cout << (*it) << "\t" << (*it)->getEventNode() << "\t";
+        std::cout << (*it)->getAbsoluteTime() << "\t" << be->getBetaInit() << "\t";
+        std::cout <<  be->getBetaShift() << "\t" << be->isJump() << "\t";
+        std::cout <<  be->getJump() << std::endl;
+    }
+    
+    BranchEvent* rr = _rootEvent;
+    TraitBranchEvent* be = static_cast<TraitBranchEvent*>((rr));
+    std::cout << (rr) << "\t" << (rr)->getEventNode() << "\t";
+    std::cout << (rr)->getAbsoluteTime() << "\t" << be->getBetaInit() << "\t";
+    std::cout <<  be->getBetaShift() << "\t" << be->isJump() << "\t";
+    std::cout <<  be->getJump() << std::endl;
+    
+    // Print Node State Data
+    _tree->debugPrintNodeData();
+    
+
+}
+
+int TraitModel::getNumberOfJumpEvents()
+{
+    int n_jumps = 0;
+    EventSet::iterator it;
+    for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it){
+        TraitBranchEvent* be = static_cast<TraitBranchEvent*>((*it));
+        if (be->isJump() == true){
+            n_jumps++;
+        }
+    }
+    return n_jumps;
+}
+
+
+int TraitModel::getNumberOfRateShiftEvents()
+{
+    // This ignores the root event, which is invariant.
+    int n_events = 0;
+    EventSet::iterator it;
+    for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it){
+        
+        TraitBranchEvent* be = static_cast<TraitBranchEvent*>((*it));
+        if (be->isJump() == false){
+            n_events++;
+        }
+    }
+    return n_events;
+    
+}
+
+double TraitModel::getRootState()
+{
+    return _tree->getRoot()->getTraitValue();
 }

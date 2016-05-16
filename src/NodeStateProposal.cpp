@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <algorithm>
 
+#include "BranchHistory.h"
 
 NodeStateProposal::NodeStateProposal
     (Random& random, Settings& settings, Model& model) :
@@ -61,12 +62,16 @@ void NodeStateProposal::propose()
         updateMinMaxTraitPriorSettings();
         _minMaxTraitPriorUpdated = true;
     }
-
+ 
     _node = _tree->chooseInternalNodeAtRandom();
 
-    double currentTriadLogLikelihood =
-        _model.computeTriadLikelihoodTraits(_node);
+
     _currentLogLikelihood = _model.getCurrentLogLikelihood();
+    //std::cout << "NodeStatePropose::propose :: _currentLogLike " << _currentLogLikelihood << std::endl;
+    
+    double currentTriadLogLikelihood =
+        _model.computeTriadLikelihoodTraits(_node);    
+    
     _currentNodeState = _node->getTraitValue();
 
     _proposedNodeState = _currentNodeState + _random.uniform
@@ -82,12 +87,16 @@ void NodeStateProposal::propose()
 
 void NodeStateProposal::accept()
 {
+    // std::cout << "NodeStateProposal::accept" << std::endl;
+    //double comp = _model.computeLogLikelihood();
+    //_model.setCurrentLogLikelihood(comp);
     _model.setCurrentLogLikelihood(_proposedLogLikelihood);
 }
 
 
 void NodeStateProposal::reject()
 {
+    // std::cout << "NodeStateProposal::reject" << std::endl;
     _node->setTraitValue(_currentNodeState);
 }
 

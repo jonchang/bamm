@@ -42,6 +42,10 @@ public:
 
     void setTimeVariable(bool isTimeVariable);
     bool isTimeVariable();
+
+    // For phenotypic jump models
+    //virtual void setIsEventValidForNode(bool x);
+    virtual bool getIsEventValidForNode();
 };
 
 

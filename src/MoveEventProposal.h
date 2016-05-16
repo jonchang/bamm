@@ -22,6 +22,8 @@ public:
 
     virtual double acceptanceRatio();
 
+    bool checkIsLikelihoodValid();
+
 private:
 
     virtual double computeLogLikelihoodRatio();

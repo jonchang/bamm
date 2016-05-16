@@ -244,6 +244,8 @@ public:
 
     std::vector<Node*> terminalNodes();
     std::vector<double> traitValues();
+    
+    void debugPrintNodeData(void);
 };
 
 

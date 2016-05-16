@@ -12,3 +12,11 @@ SpExBranchEvent::SpExBranchEvent(double speciation, double lamshift,
         _muInit(extinction), _muShift(mushift), _isTimeVariable(isTimeVariable)
 {
 }
+
+
+// This is implemented solely to use this function to avoid mapping
+// phenotypic jumps to nodes in the phenotypic jump model.
+bool SpExBranchEvent::getIsEventValidForNode()
+{
+    return true;
+}

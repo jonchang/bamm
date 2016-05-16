@@ -1499,6 +1499,7 @@ void Tree::setMeanBranchTraitRates()
 {
     for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
             i != _preOrderNodes.end(); ++i) {
+        //std::cout << "Event data for node " << (*i) << std::endl;
         computeMeanTraitRatesByNode((*i));
     }
 }
@@ -1513,13 +1514,27 @@ void Tree::setMeanBranchTraitRates()
 
 void Tree::computeMeanTraitRatesByNode(Node* x)
 {
+    // std::cout << "Tree::computeMeanTraitRatesByNode Debug print begin\n" << std::endl;
+    // debugPrintNodeData();
+    
     BranchHistory* bh = x->getBranchHistory();
 
+    // Old rate DEBUG
+    //double old_rate = x->getMeanBeta();
+    // * //
     if (x->getAnc() != NULL) {
         // Only compute mean branch rate if node is NOT the root
 
         double rate = 0.0;
+        double netjump = 0.0;
+        
         int n_events = bh->getNumberOfBranchEvents();
+        int n_jumps  = bh->getNumberOfJumpsOnBranch();
+        
+        for (int i = 0; i < n_jumps; i++){
+            TraitBranchEvent* tmpevent = static_cast<TraitBranchEvent*>(bh->getJumpByIndexPosition(i));
+            netjump += tmpevent->getJump();
+        }
 
         TraitBranchEvent* ancestralEvent =
             static_cast<TraitBranchEvent*>(bh->getAncestralNodeEvent());
@@ -1535,16 +1550,17 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
 
             double zpar = ancestralEvent->getBetaShift();
             double beta0 = ancestralEvent->getBetaInit();
-
+            
+            
+            // std::cout << "beta0\t" << beta0 <<"\tzpar\t" << zpar << "\tt1/t2\t" << t1 << "\t" << t2 << std::endl;
+            
             rate = x->integrateExponentialRateFunction(beta0, zpar, t1, t2);
             rate /= x->getBrlen();
 
         } else {
-
             double tcheck = 0.0;
             double t1 = x->getAnc()->getTime();
-            double t2 = bh->getEventByIndexPosition(0)->getAbsoluteTime();
-
+            double t2 = bh->getEventByIndexPosition((int)0)->getAbsoluteTime();
             tcheck += (t2 - t1);
 
             // Times must be relative to initial time of event
@@ -1552,22 +1568,26 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
             t2 -= ancestralEvent->getAbsoluteTime();
             double zpar = ancestralEvent->getBetaShift();
             double beta0 = ancestralEvent->getBetaInit();
-
+            // bool jj = ancestralEvent->isJump();
+            // std::cout << "3beta0\t" << beta0 <<"\tzpar\t" << zpar << "\tt1/t2\t" << t1 << "\t" << t2 << "\tjj\t" << jj << std::endl;
             rate = x->integrateExponentialRateFunction(beta0, zpar, t1, t2);
 
             for (int k = 1; k < n_events; k++) {
 
                 t1 = 0.0;
                 t2 = bh->getEventByIndexPosition(k)->getAbsoluteTime() -
-                     bh->getEventByIndexPosition((k - 1))->getAbsoluteTime();
+                     bh->getEventByIndexPosition((k-1))->getAbsoluteTime();
 
                 TraitBranchEvent* eventAtKMinus1 =
                     static_cast<TraitBranchEvent*>
-                        (bh->getEventByIndexPosition(k - 1));
+                        (bh->getEventByIndexPosition( k-1 ));
 
                 zpar = eventAtKMinus1->getBetaShift();
                 beta0 = eventAtKMinus1->getBetaInit();
 
+                //jj = eventAtKMinus1->isJump();
+                // std::cout << "2beta0\t" << beta0 <<"\tzpar\t" << zpar << "\tt1/t2\t" << t1 << "\t" << t2 << "\tjj\t" << jj << std::endl;
+                
                 rate += x->integrateExponentialRateFunction(beta0, zpar, t1, t2);
 
                 tcheck += (t2 - t1);
@@ -1575,15 +1595,17 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
             }
 
             t1 = 0.0;
-            t2 = x->getTime() - bh->getEventByIndexPosition((n_events -
-                    1))->getAbsoluteTime();
+            t2 = x->getTime() - bh->getEventByIndexPosition( (n_events - 1) )->getAbsoluteTime();
 
             TraitBranchEvent* event = static_cast<TraitBranchEvent*>
                 (bh->getNodeEvent());
-
+            
             zpar = event->getBetaShift();
             beta0 = event->getBetaInit();
-
+            
+            // jj = event->isJump();
+            // std::cout << "3beta0\t" << beta0 <<"\tzpar\t" << zpar << "\tt1/t2\t" << t1 << "\t" << t2 << "\tjj\t" << jj << std::endl;
+            
             rate += x->integrateExponentialRateFunction(beta0, zpar, t1, t2);
 
             tcheck += (t2 - t1);
@@ -1595,10 +1617,14 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
             //std::cout << "Rate: " << rate << std::endl;
         }
         x->setMeanBeta(rate);
-
+        x->setNetJump(netjump);
+        
+        //std::cout << "OLDRATE\t" << old_rate << "\tNEWRATE\t" << rate << std::endl;
+        
     } else {
         // Node is root
         x->setMeanBeta((double)0.0);
+        x->setNetJump((double)0.0);
 
     }
 
@@ -1624,6 +1650,9 @@ void Tree::computeMeanTraitRatesByNode(Node* x)
 
 #endif
 
+    //std::cout << "Tree::computeMeanTraitRatesByNode Debug print END\n" << std::endl;
+    // debugPrintNodeData();
+    
 }
 
 
@@ -1984,3 +2013,18 @@ std::vector<double> Tree::traitValues()
 
     return values;
 }
+
+void Tree::debugPrintNodeData(void)
+{
+    std::cout << "debugPrintNodeData" << std::endl;
+    std::cout << "Node\tTrait\tMeanBeta\tNetJump" << std::endl;
+    
+    for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
+         i != _preOrderNodes.end(); ++i) {
+        std::cout << (*i) << "\t" << (*i)->getTraitValue() << "\t" << (*i)->getMeanBeta();
+        std::cout << "\t" << (*i)->getNetJump() << std::endl;
+    }
+    
+    
+}
+

@@ -54,7 +54,15 @@ public:
     
     double preservationRatePrior(double);
     
-    
+    // Jump model:
+    double jumpPrior(double);
+    double generateJumpFromPrior();
+    bool generateIsEventJumpFromPrior();
+    double isEventJumpPrior();
+
+    //double jumpVariancePrior(double);
+    //double generateJumpVarianceFromPrior();
+
 // Root priors:
     
     double lambdaShiftRootPrior(double);
@@ -125,9 +133,17 @@ private:
     double _updateRateBetaShift;
 
     double _poissonRatePrior;
-    
+
     double _preservationRatePrior;
-    
+
+    // Jump model: ~N(0, theta)
+    double _jumpPrior;
+    double _updateRateJump;
+    double _isEventJumpPrior;
+    double _updateRateJumpVariance;
+
+    //double _jumpVarianceInit;
+    //double _jumpVariancePrior;
 };
 
 

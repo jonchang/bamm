@@ -14,7 +14,7 @@ class BetaTimeModeProposal : public TimeModeProposal
 public:
 
     BetaTimeModeProposal(Random& random, Settings& settings, Model& model);
-
+    virtual double acceptanceRatio();
 protected:
 
     double initialParameter(BranchEvent* event);

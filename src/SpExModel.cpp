@@ -320,6 +320,12 @@ void SpExModel::setMeanBranchParameters()
     _tree->setMeanBranchExtinction();
 }
 
+void SpExModel::setMeanBranchParameters(Node* x)
+{
+    //_tree->setMeanBranchSpeciation();
+    //_tree->setMeanBranchExtinction();
+}
+
 
 BranchEvent* SpExModel::newBranchEventWithParametersFromSettings(double x)
 {
@@ -1092,7 +1098,10 @@ void SpExModel::outputDebugVectors()
     
 }
 
-
+void SpExModel::checkModel()
+{
+    std::cout << "SpExModel::checkModel() " << std::endl;
+}
 
 
 

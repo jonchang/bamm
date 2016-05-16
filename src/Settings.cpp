@@ -292,6 +292,22 @@ void Settings::initializeTraitSettings()
     addParameter("updateRateBetaShift", "0.0");
     addParameter("updateRateNodeState", "0.0");
     addParameter("updateRateBetaTimeMode", "0.0");
+    
+    // Jump model parameters
+    
+    addParameter("jumpPrior", "0.0", NotRequired);
+    addParameter("isEventJumpPrior", "0.0", NotRequired);
+    
+    addParameter("updateRateJump", "0.0", NotRequired);
+    addParameter("updateRateJumpVariance", "0.0", NotRequired);
+    
+    addParameter("updateJumpScale", "0.0", NotRequired);
+    addParameter("updateJumpVarianceScale", "1.0", NotRequired);
+    addParameter("jumpVarianceInit", "1.0", NotRequired);
+    
+    addParameter("traitModelFilename", "traitmodeldata.txt", NotRequired);
+    
+    addParameter("jumpVariancePrior", "1.0", NotRequired);
 }
 
 

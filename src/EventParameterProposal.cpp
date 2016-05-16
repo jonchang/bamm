@@ -19,10 +19,17 @@ EventParameterProposal::EventParameterProposal
 
 void EventParameterProposal::propose()
 {
+    _currentLogLikelihood = _model.getCurrentLogLikelihood();
+
+    double ll = _model.computeLogLikelihood();
+    double delta = std::fabs(ll - _currentLogLikelihood);
+    if (delta > 0.0000001){
+        std::cout << "\tNoMatch1 EPP: " << ll << "\t" << _currentLogLikelihood << std::endl;
+        //exit(0);
+    }
+    
     _event = _model.chooseEventAtRandom(true);
     _currentParameterValue = getCurrentParameterValue();
-
-    _currentLogLikelihood = _model.getCurrentLogLikelihood();
 
     _proposedParameterValue = computeNewParameterValue();
     setProposedParameterValue();
@@ -30,6 +37,13 @@ void EventParameterProposal::propose()
     updateParameterOnTree();
 
     _proposedLogLikelihood = _model.computeLogLikelihood();
+
+    ll = _model.computeLogLikelihood();
+    delta = std::fabs(ll - _proposedLogLikelihood);
+    if (delta > 0.0000001){
+        std::cout << "\tNoMatch2 EPP: " << ll << "\tproposed (stored)" << _proposedLogLikelihood << std::endl;
+        //exit(0);
+    }
 }
 
 
@@ -43,7 +57,7 @@ void EventParameterProposal::reject()
 {
     revertToOldParameterValue();
     updateParameterOnTree();
-}
+ }
 
 
 double EventParameterProposal::acceptanceRatio()

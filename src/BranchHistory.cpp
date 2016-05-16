@@ -10,13 +10,16 @@ BranchHistory::BranchHistory() : _nodeEvent(NULL), _ancestralNodeEvent(NULL)
 }
 
 
+// TODO: why does this not return ancestral event if no events on branch?
 BranchEvent* BranchHistory::getLastEvent()
 {
+
     if (_eventsOnBranch.size() == 0) {
         return NULL;
     }
 
     EventSet::reverse_iterator it = _eventsOnBranch.rbegin();
+    // increment, test if each is valid.
     return *it;
 }
 
@@ -25,6 +28,10 @@ BranchEvent* BranchHistory::getLastEvent()
 // assuming branch history is set correctly.
 BranchEvent* BranchHistory::getLastEvent(BranchEvent* x)
 {
+    if (! x->getIsEventValidForNode()){
+        std::cout << "getLastEvent(BranchEvent* x) / should never get here" << std::endl;
+        exit(0);
+    }
     BranchEvent* theLastEvent = NULL;
 
     EventSet::iterator it;
@@ -41,7 +48,7 @@ BranchEvent* BranchHistory::getLastEvent(BranchEvent* x)
     }
 
     if (theLastEvent == NULL) {
-        log(Warning) << "Problem in BranchHistory::getLastEvent()\n";
+        log(Warning) << "Problem in BranchHistory::getLastEvent(BranchEvent* )\n";
     }
 
     return theLastEvent;
@@ -128,6 +135,21 @@ int BranchHistory::getNumberOfEventsOnInterval(double t1, double t2)
     return n_events;
 }
 
+BranchEvent* BranchHistory::getJumpByIndexPosition(int index)
+{
+    EventSetSizeType i = static_cast<EventSetSizeType>(index);
+    if (i < _jumpsOnBranch.size()) {
+        EventSet::iterator it = _jumpsOnBranch.begin();
+        for (EventSetSizeType k = 0; k < i; k++)
+            it++;
+        return *it;
+    } else {
+        log(Error) << "BranchHistory::getJumpByIndexPosition: "
+        << "accessing invalid jump event\n";
+        std::exit(1);
+    }
+    
+}
 
 BranchEvent* BranchHistory::getEventByIndexPosition(int index)
 {
@@ -180,7 +202,12 @@ void BranchHistory::printEvent(BranchEvent* event)
 
 void BranchHistory::setNodeEvent(BranchEvent* x)
 {
-    _nodeEvent = x;
+    bool isGood = x->getIsEventValidForNode();
+    if (isGood){
+        _nodeEvent = x;
+    }else{
+        std::cout << "BranchHistory::setNodeEvent(BranchEvent* x) : Set invalid node state " << std::endl;
+    }
 }
 
 
@@ -204,17 +231,59 @@ BranchEvent* BranchHistory::getAncestralNodeEvent()
 
 void BranchHistory::popEventOffBranchHistory(BranchEvent* x)
 {
-    _eventsOnBranch.erase(x);
+    if (x->getIsEventValidForNode()){
+        _eventsOnBranch.erase(x);
+    }else{
+        _jumpsOnBranch.erase(x);
+    }
 }
 
 
 void BranchHistory::addEventToBranchHistory(BranchEvent* x)
 {
-    _eventsOnBranch.insert(x);
+    if (x->getIsEventValidForNode()){
+        _eventsOnBranch.insert(x);
+    }else{
+        _jumpsOnBranch.insert(x);
+    }
 }
 
 
 int BranchHistory::getNumberOfBranchEvents()
 {
     return (int)_eventsOnBranch.size();
+}
+
+int BranchHistory::getNumberOfJumpsOnBranch()
+{
+    return (int)_jumpsOnBranch.size();
+}
+
+
+bool BranchHistory::testEventAssignments()
+{
+    bool isValid = false;
+    
+    int n_events = getNumberOfBranchEvents();
+    int n_jumps = getNumberOfJumpsOnBranch();
+    
+    int event_check = 0;
+    int jump_check = 0;
+    
+    for (EventSet::iterator iter = _eventsOnBranch.begin(); iter != _eventsOnBranch.end(); ++iter){
+        if ((*iter)->getIsEventValidForNode()){
+            event_check++;
+        }
+    }
+    for (EventSet::iterator iter = _jumpsOnBranch.begin(); iter != _jumpsOnBranch.end(); ++iter){
+        if ((*iter)->getIsEventValidForNode() == false){
+            jump_check++;
+        }
+    }
+    
+    if ((n_events == event_check) && (n_jumps == jump_check)){
+        isValid = true;
+    }
+    
+    return isValid;
 }

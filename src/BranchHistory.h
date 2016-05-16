@@ -19,6 +19,7 @@ private:
     // Also, if no events occur on branch, then entire branch is described by
     // the event referenced at nodeEvent
     EventSet _eventsOnBranch;
+    EventSet _jumpsOnBranch;
 
 public:
 
@@ -46,6 +47,11 @@ public:
     void popEventOffBranchHistory(BranchEvent* x);
     void addEventToBranchHistory(BranchEvent* x);
     int  getNumberOfBranchEvents();
+
+    // jump additions
+    int getNumberOfJumpsOnBranch();
+    BranchEvent* getJumpByIndexPosition(int i);
+    bool testEventAssignments();
 };
 
 

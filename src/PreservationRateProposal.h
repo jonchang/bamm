@@ -3,10 +3,8 @@
 
 
 #define ____PreservationRateProposal__
- 
 
 #include "Proposal.h"
-   
 
 class Random;
 class Settings;
@@ -19,7 +17,7 @@ class PreservationRateProposal : public Proposal
 public:
     
     PreservationRateProposal(Random& random, Settings& settings,
-                                Model& model, Prior& prior);
+                             Model& model, Prior& prior);
     
     virtual void propose();
     virtual void accept();
@@ -29,7 +27,6 @@ public:
     
     
 private:
- 
     double getCurrentParameterValue();
     void setProposedParameterValue();
     void revertToOldParameterValue();
@@ -53,9 +50,8 @@ private:
     double _proposedLogPrior;
     
     double _updatePreservationRateScale;
-    double _cterm;  
+    double _cterm;
 
 };
- 
 
 #endif /* defined(____PreservationRateProposal__) */

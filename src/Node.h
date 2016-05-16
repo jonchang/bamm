@@ -54,6 +54,7 @@ private:
     double _meanBeta; // mean phenotypic rate
     double _nodeBeta; // exact value at node.
     bool   _isTraitFixed; // is trait value a free parameter?
+    double _netJump;
 
     //specific stuff for compound poisson rate model
     double _meanSpeciationRate;
@@ -179,6 +180,10 @@ public:
     // Phenotypic stuff:
     void setTraitValue(double x);
     double getTraitValue();
+
+    // Jump model
+    void setNetJump(double x);
+    double getNetJump();
 
     void setMeanBeta(double x);
     double getMeanBeta();
@@ -640,6 +645,15 @@ inline void Node::setInheritFromLeft(bool x)
     _inheritFromLeft = x;
 }
 
+inline void Node::setNetJump(double x)
+{
+    _netJump = x;
+}
+
+inline double Node::getNetJump()
+{
+    return _netJump;
+}
 
 
 #endif

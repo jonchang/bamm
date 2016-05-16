@@ -34,30 +34,59 @@ void MoveEventProposal::propose()
     _event = _model.chooseEventAtRandom();
     _currentLogLikelihood = _model.getCurrentLogLikelihood();
 
-    // This is the event preceding the chosen event;
-    // histories should be set forward from here
-    BranchEvent* previousEvent = _event->getEventNode()->getBranchHistory()->
+    if (_event->getIsEventValidForNode() == true){
+        
+        // histories should be set forward from here
+        BranchEvent* previousEvent = _event->getEventNode()->getBranchHistory()->
         getLastEvent(_event);
-
-    _event->getEventNode()->getBranchHistory()->
+        
+        _event->getEventNode()->getBranchHistory()->
         popEventOffBranchHistory(_event);
-
-    double localMoveProb = _localToGlobalMoveRatio /
+        
+        double localMoveProb = _localToGlobalMoveRatio /
         (1 + _localToGlobalMoveRatio);
+        
+        // Choose to move locally or globally
+        if (_random.trueWithProbability(localMoveProb)) {
+            double step = _random.uniform(0, _scale) - 0.5 * _scale;
+            _event->moveEventLocal(step);
+        } else {
+            _event->moveEventGlobal();
+        }
+        
+        _event->getEventNode()->getBranchHistory()->addEventToBranchHistory(_event);
+        
+        _model.forwardSetBranchHistories(previousEvent);
+        _model.forwardSetBranchHistories(_event);
+        _model.setMeanBranchParameters();
+    
+    }else{
 
-    // Choose to move locally or globally
-    if (_random.trueWithProbability(localMoveProb)) {
-        double step = _random.uniform(0, _scale) - 0.5 * _scale;
-        _event->moveEventLocal(step);
-    } else {
-        _event->moveEventGlobal();
+        _event->getEventNode()->getBranchHistory()->
+        popEventOffBranchHistory(_event);
+        
+        double localMoveProb = _localToGlobalMoveRatio /
+        (1 + _localToGlobalMoveRatio);
+        
+        // Choose to move locally or globally
+        if (_random.trueWithProbability(localMoveProb)) {
+            double step = _random.uniform(0, _scale) - 0.5 * _scale;
+            _event->moveEventLocal(step);
+        } else {
+            _event->moveEventGlobal();
+        }
+        
+        _event->getEventNode()->getBranchHistory()->addEventToBranchHistory(_event);
+ 
+        // what is problem w this?
+        _model.setMeanBranchParameters(_event->getEventNode());
+        
+        _model.setMeanBranchParameters();
+
     }
+    
+    // This is the event preceding the chosen event;
 
-    _event->getEventNode()->getBranchHistory()->addEventToBranchHistory(_event);
-
-    _model.forwardSetBranchHistories(previousEvent);
-    _model.forwardSetBranchHistories(_event);
-    _model.setMeanBranchParameters();
 
     _proposedLogLikelihood = _model.computeLogLikelihood();
 }
@@ -76,28 +105,48 @@ void MoveEventProposal::accept()
 void MoveEventProposal::reject()
 {
     if (_currentEventCount == 0) {
-        return;
+         return;
     }
 
-    // Get last event from position of event to be removed
-    BranchEvent* lastEvent = _event->getEventNode()->getBranchHistory()->
+    
+    
+    if (_event->getIsEventValidForNode() == true){
+        // Get last event from position of event to be removed
+        BranchEvent* lastEvent = _event->getEventNode()->getBranchHistory()->
         getLastEvent(_event);
-
-    // Pop event off its new location
-    _event->getEventNode()->getBranchHistory()->
+        
+        // Pop event off its new location
+        _event->getEventNode()->getBranchHistory()->
         popEventOffBranchHistory(_event);
-
-    // Reset nodeptr, reset mapTime
-    _event->revertOldMapPosition();
-
-    // Now reset forward from _lastEventChanged (new position)
-    // and from newLastEvent, which holds 'last' event before old position
-    _event->getEventNode()->getBranchHistory()->
+        
+        // Reset nodeptr, reset mapTime
+        _event->revertOldMapPosition();
+        
+        // Now reset forward from _lastEventChanged (new position)
+        // and from newLastEvent, which holds 'last' event before old position
+        _event->getEventNode()->getBranchHistory()->
         addEventToBranchHistory(_event);
-
-    _model.forwardSetBranchHistories(lastEvent);
-    _model.forwardSetBranchHistories(_event);
-    _model.setMeanBranchParameters();
+        
+        _model.forwardSetBranchHistories(lastEvent);
+        _model.forwardSetBranchHistories(_event);
+        _model.setMeanBranchParameters();
+        
+        
+        
+    }else{
+ 
+        // Pop event off its new location
+        _event->getEventNode()->getBranchHistory()->popEventOffBranchHistory(_event);
+        
+        // Reset nodeptr, reset mapTime
+        _event->revertOldMapPosition();
+        
+        // Now reset forward from _lastEventChanged (new position)
+        // and from newLastEvent, which holds 'last' event before old position
+        _event->getEventNode()->getBranchHistory()->
+        addEventToBranchHistory(_event);
+        _model.setMeanBranchParameters();
+     }
 }
 
 
@@ -128,4 +177,16 @@ double MoveEventProposal::acceptanceRatio()
 double MoveEventProposal::computeLogLikelihoodRatio()
 {
     return _proposedLogLikelihood - _currentLogLikelihood;
+}
+
+bool MoveEventProposal::checkIsLikelihoodValid()
+{
+    double logL_compute = _model.computeLogLikelihood();
+    double logL_stored = _model.getCurrentLogLikelihood();
+    double delta = std::fabs(logL_compute - logL_stored);
+    if (delta > 0.0000001){
+        return false;
+    }else{
+        return true;
+    }
 }

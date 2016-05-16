@@ -56,7 +56,7 @@ void Node::init(int x)
     _trait = 0.0;
     _meanBeta = 0;
     _isTraitFixed = 0;
-
+    _netJump = 0.0;
     _ei = -1.0;
     _di = -1.0;
     _etip = -1.0;

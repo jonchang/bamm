@@ -5,6 +5,7 @@
 #include "ModelDataWriter.h"
 #include "TraitEventDataWriter.h"
 #include "NodeStateDataWriter.h"
+#include "TraitModelParamsDataWriter.h"
 
 class Settings;
 class Model;
@@ -22,6 +23,7 @@ protected:
 
     TraitEventDataWriter _eventDataWriter;
     NodeStateDataWriter _nodeStateDataWriter;
+    TraitModelParamsDataWriter _modelParamsDataWriter;
 };
 
 

@@ -163,6 +163,10 @@ void Model::forwardSetBranchHistories(BranchEvent* x)
     // event occurs) you get the corresponding branch history and the last
     // event since the events will have been inserted in the correct order.
 
+    if (x->getIsEventValidForNode() == false){
+        std::cout << "ERROR forwardSetBranchHistories(BranchEvent* x) / passed jump node" << std::endl;
+        exit(0);
+    }
     Node* myNode = x->getEventNode();
 
     if (x == _rootEvent) {
@@ -197,6 +201,11 @@ void Model::forwardSetHistoriesRecursive(Node* p)
     // Get event that characterizes parent node
     BranchEvent* lastEvent = p->getAnc()->getBranchHistory()->getNodeEvent();
 
+    if (lastEvent->getIsEventValidForNode() == false){
+        std::cout << "ERROR forwardSetHistoriesRecursive(Node* p) / passed jump node" << std::endl;
+        exit(0);
+    }
+    
     // Set the ancestor equal to the event state of parent node:
     p->getBranchHistory()->setAncestralNodeEvent(lastEvent);
 
@@ -311,8 +320,15 @@ BranchEvent* Model::addEventToTree(BranchEvent* newEvent)
         addEventToBranchHistory(newEvent);
 
     _eventCollection.insert(newEvent);
-    forwardSetBranchHistories(newEvent);
-    setMeanBranchParameters();
+    
+    // only set if event is non-jump
+    
+    if (newEvent->getIsEventValidForNode() == true){
+        forwardSetBranchHistories(newEvent);
+        setMeanBranchParameters();
+    }else{
+        setMeanBranchParameters(newEvent->getEventNode());
+    }
 
     _lastEventModified = newEvent;
 
@@ -349,42 +365,78 @@ BranchEvent* Model::removeEventFromTree(BranchEvent* be)
         std::exit(1);
     }
 
+    
+    
+    // Two paths depending on whether node is jump or not
+    // This could be more efficient but will keep separate now
+    
     // Erase from branch history
     Node* currNode = be->getEventNode();
 
-    // Get event downstream of i
-    BranchEvent* newLastEvent = currNode->getBranchHistory()->getLastEvent(be);
-
-    _lastDeletedEventMapTime = be->getMapTime();
-
-    setDeletedEventParameters(be);
-    _logQRatioJump = calculateLogQRatioJump();
-
-    currNode->getBranchHistory()->popEventOffBranchHistory(be);
-
-    // Cannot remove "be" with _eventCollection.erase(be) because
-    // it is not always found in the collection, even though it is there.
-    // It seems that, because event pointers are compared by comparing
-    // doubles, the event is sometimes not seen (floating-point issue).
-    bool eventFound = false;
-    EventSet::iterator it;
-    for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it) {
-        if (*it == be) {    // Compare pointers directly, not using comparer
-            _eventCollection.erase(it);
-            eventFound = true;
-            break;
+    if (be->getIsEventValidForNode() == true){
+        
+        // Get event downstream of i
+        BranchEvent* newLastEvent = currNode->getBranchHistory()->getLastEvent(be);
+        
+        _lastDeletedEventMapTime = be->getMapTime();
+        
+        setDeletedEventParameters(be);
+        _logQRatioJump = calculateLogQRatioJump();
+        
+        currNode->getBranchHistory()->popEventOffBranchHistory(be);
+        
+        // Cannot remove "be" with _eventCollection.erase(be) because
+        // it is not always found in the collection, even though it is there.
+        // It seems that, because event pointers are compared by comparing
+        // doubles, the event is sometimes not seen (floating-point issue).
+        bool eventFound = false;
+        EventSet::iterator it;
+        for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it) {
+            if (*it == be) {    // Compare pointers directly, not using comparer
+                _eventCollection.erase(it);
+                eventFound = true;
+                break;
+            }
         }
+        
+        if (!eventFound) {
+            log(Error) << "Could not find event to delete.\n";
+            std::exit(1);
+        }
+        forwardSetBranchHistories(newLastEvent);
+        setMeanBranchParameters();
+       
+    }else{
+        
+        _lastDeletedEventMapTime = be->getMapTime();
+        
+        setDeletedEventParameters(be);
+        _logQRatioJump = calculateLogQRatioJump();
+        
+        currNode->getBranchHistory()->popEventOffBranchHistory(be);
+        
+        // Cannot remove "be" with _eventCollection.erase(be) because
+        // it is not always found in the collection, even though it is there.
+        // It seems that, because event pointers are compared by comparing
+        // doubles, the event is sometimes not seen (floating-point issue).
+        bool eventFound = false;
+        EventSet::iterator it;
+        for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it) {
+            if (*it == be) {    // Compare pointers directly, not using comparer
+                _eventCollection.erase(it);
+                eventFound = true;
+                break;
+            }
+        }
+        
+        if (!eventFound) {
+            log(Error) << "Could not find event to delete.\n";
+            std::exit(1);
+        }
+        setMeanBranchParameters(be->getEventNode());
+        
     }
-
-    if (!eventFound) {
-        log(Error) << "Could not find event to delete.\n";
-        std::exit(1);
-    }
-
-    forwardSetBranchHistories(newLastEvent);
-
-    setMeanBranchParameters();
-
+ 
     return be;
 }
 

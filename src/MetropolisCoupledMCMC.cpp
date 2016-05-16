@@ -115,6 +115,7 @@ void MetropolisCoupledMCMC::runChains(int genStart, int genEnd)
 void MetropolisCoupledMCMC::runChain(int i, int genStart, int genEnd)
 {
     for (int g = genStart; g < genEnd; g++) {
+        // std::cout << "\n\nMetropolisCoupledMCMC::runChain\t" << g << std::endl;
         _chains[i]->step();
 
         if (i == _coldChainIndex) {

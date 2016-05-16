@@ -23,6 +23,8 @@ public:
 
 protected:
 
+    int _generation;
+
     // MCMC has its own random generator, using the seeder
     // (another random generator) to seed it
     Random _random;

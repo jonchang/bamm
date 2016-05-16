@@ -33,9 +33,7 @@ void EventNumberProposal::propose()
         _lastEventChanged = _model.removeRandomEventFromTree();
         _lastProposal = RemoveEvent;
     }
-
     _model.setMeanBranchParameters();
-
     _proposedEventCount = _model.getNumberOfEvents();
     _proposedLogLikelihood = _model.computeLogLikelihood();
     _proposedLogPrior = _model.computeLogPrior();
@@ -118,5 +116,17 @@ double EventNumberProposal::computeLogQRatio()
         // 0.6931... is ln 2.0
         double logQRatio = (_currentEventCount != 1) ? 0.0 : 0.69314718055995;
         return logQRatio + _model.logQRatioJump();
+    }
+}
+
+bool EventNumberProposal::checkIsLikelihoodValid()
+{
+    double logL_compute = _model.computeLogLikelihood();
+    double logL_stored = _model.getCurrentLogLikelihood();
+    double delta = std::fabs(logL_compute - logL_stored);
+    if (delta > 0.0000001){
+        return false;
+    }else{
+        return true;
     }
 }

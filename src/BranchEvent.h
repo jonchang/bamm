@@ -83,6 +83,10 @@ public:
     // For time-varying rjMCMC:
     void setIsEventTimeVariable(bool x);
     bool getIsEventTimeVariable();
+
+    // For phenotypic jump models
+    //virtual void setIsEventValidForNode(bool x);
+    virtual bool getIsEventValidForNode() = 0;
 };
 
 

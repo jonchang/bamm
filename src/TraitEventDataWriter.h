@@ -25,7 +25,7 @@ private:
 
 inline std::string TraitEventDataWriter::specificHeader()
 {
-    return ",betainit,betashift";
+    return ",betainit,betashift,jump";
 }
 
 

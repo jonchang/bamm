@@ -27,6 +27,15 @@ public:
 
     virtual double computeLogPrior();
 
+    virtual void checkModel();
+    
+    double getJumpVariance();
+    // void setJumpVariance(double x);
+    
+    int getNumberOfJumpEvents();
+    int getNumberOfRateShiftEvents();
+    double getRootState();
+
 private:
 
     virtual void setRootEventWithReadParameters
@@ -42,6 +51,7 @@ private:
     virtual BranchEvent* newBranchEventFromLastDeletedEvent();
 
     virtual void setMeanBranchParameters();
+    virtual void setMeanBranchParameters(Node* x);
     virtual void setDeletedEventParameters(BranchEvent* be);
 
     virtual double calculateLogQRatioJump();
@@ -54,6 +64,9 @@ private:
     double _lastDeletedEventBetaInit;;
     double _lastDeletedEventBetaShift;
     bool _lastDeletedEventTimeVariable;
+    
+    bool _lastDeletedEventIsJump;
+    double _lastDeletedEventJump;
 
     // Here are several variables that track the previous
     // state. At some point, these should have their own class
@@ -65,7 +78,23 @@ private:
 
     double _readBetaInit;
     double _readBetaShift;
+
+    // hierarchical model parameter for jumps
+    double _jumpVariance;
 };
+
+
+/*
+inline void TraitModel::setJumpVariance(double x)
+{
+    _jumpVariance = x;
+}
+*/
+
+inline double TraitModel::getJumpVariance()
+{
+    return _jumpVariance;
+}
 
 
 #endif

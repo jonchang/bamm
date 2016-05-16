@@ -15,6 +15,14 @@ BetaTimeModeProposal::BetaTimeModeProposal
     _weight = settings.get<double>("updateRateBetaTimeMode");
 }
 
+double BetaTimeModeProposal::acceptanceRatio()
+{
+    if ( static_cast<TraitBranchEvent*>(_event)->isJump() == false ) {
+        return TimeModeProposal::acceptanceRatio();
+    } else {
+        return 0.0;
+    }
+}
 
 double BetaTimeModeProposal::initialParameter(BranchEvent* event)
 {
@@ -47,6 +55,7 @@ void BetaTimeModeProposal::setEventParameters(BranchEvent* event,
 
 void BetaTimeModeProposal::setModelParameters()
 {
+    std::cout << "DEBUG / in beta time mode proposal" << std::endl;
     _tree->setMeanBranchTraitRates();
 }
 
