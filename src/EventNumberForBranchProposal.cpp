@@ -3,6 +3,9 @@
 #include "Settings.h"
 #include "Model.h"
 
+#include "global_macros.h"
+
+
 #include <algorithm>
 
 
@@ -23,6 +26,10 @@ EventNumberForBranchProposal::EventNumberForBranchProposal
 
 void EventNumberForBranchProposal::propose()
 {
+    
+    std::cout << "EventNumberForBranchProposal::propose() not supported " << std::endl;
+    exit(0);
+    
     _currentEventCount = _model.getNumberOfEvents();
     _currentLogLikelihood = _model.getCurrentLogLikelihood();
     _currentLogPrior = _model.computeLogPrior();

@@ -1,3 +1,4 @@
+#include "global_macros.h"
 #include "EventRateProposal.h"
 #include "Random.h"
 #include "Settings.h"

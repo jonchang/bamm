@@ -1,6 +1,9 @@
 #include "SpExDataWriter.h"
 #include "ModelDataWriter.h"
 
+#include "global_macros.h"
+
+
 class Settings;
 class Model;
 

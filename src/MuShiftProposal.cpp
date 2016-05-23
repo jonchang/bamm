@@ -6,6 +6,9 @@
 #include "Tree.h"
 #include "SpExBranchEvent.h"
 
+#include "global_macros.h"
+
+
 
 MuShiftProposal::MuShiftProposal
     (Random& random, Settings& settings, Model& model, Prior& prior) :

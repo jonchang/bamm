@@ -4,6 +4,9 @@
 #include "Prior.h"
 #include "TraitBranchEvent.h"
 
+#include "global_macros.h"
+
+
 class Random;
 class Model;
 

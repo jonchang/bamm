@@ -1,3 +1,4 @@
+#include "global_macros.h"
 #include "LambdaShiftProposal.h"
 #include "Random.h"
 #include "Settings.h"
@@ -53,8 +54,16 @@ void LambdaShiftProposal::revertToOldParameterValue()
 
 void LambdaShiftProposal::updateParameterOnTree()
 {
+
+#ifdef USE_FAST
+    _tree->setNodeSpeciationParameters(_event->getEventNode());
+    _tree->setNodeExtinctionParameters(_event->getEventNode());
+    _tree->recursiveSetAreParamsCurrentToRoot(_event->getEventNode());
+#else
     _tree->setNodeSpeciationParameters();
     _tree->setNodeExtinctionParameters();
+#endif
+
 }
 
 

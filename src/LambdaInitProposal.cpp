@@ -1,3 +1,4 @@
+#include "global_macros.h"
 #include "LambdaInitProposal.h"
 #include "Random.h"
 #include "Settings.h"
@@ -32,6 +33,7 @@ double LambdaInitProposal::computeNewParameterValue()
 void LambdaInitProposal::setProposedParameterValue()
 {
     static_cast<SpExBranchEvent*>(_event)->setLamInit(_proposedParameterValue);
+ 
 }
 
 
@@ -43,8 +45,18 @@ void LambdaInitProposal::revertToOldParameterValue()
 
 void LambdaInitProposal::updateParameterOnTree()
 {
+
+#ifdef USE_FAST
+    //std::cout << "LambdaInitProposal::updateParameterOnTree() ..." << std::endl;
+    _tree->setNodeSpeciationParameters(_event->getEventNode());
+    _tree->setNodeExtinctionParameters(_event->getEventNode());
+    _tree->recursiveSetAreParamsCurrentToRoot(_event->getEventNode());
+    
+#else
     _tree->setNodeSpeciationParameters();
     _tree->setNodeExtinctionParameters();
+#endif
+
 }
 
 

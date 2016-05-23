@@ -70,8 +70,8 @@ public:
 
     // These functions take a branch event and recursively update
     // the branch histories for all nodes going toward the tips
-    void forwardSetBranchHistories(BranchEvent* x);
-    void forwardSetHistoriesRecursive(Node* p);
+    virtual void forwardSetBranchHistories(BranchEvent* x);
+    virtual void forwardSetHistoriesRecursive(Node* p);
 
     BranchEvent* addRandomEventToTree();
     BranchEvent* addFixedParameterEventToRandomLocation();
@@ -97,7 +97,20 @@ public:
     bool isEventConfigurationValid(BranchEvent* be);
     bool testEventConfigurationComprehensive();
     
+    bool getIsNewProposal();
+    void setIsNewProposal(bool x);
+    virtual void revertLikelihoodNodeParams() = 0;
+    double sumNodeLikelihoods();
+    virtual void printEventData() = 0;
+    void globalSetAllNodesNewUpdate();
+    void printNodeUpdateStatus();
+    void forwardSetBranchHistoriesSafe(BranchEvent* x);
+    void forwardSetHistoriesSafeRecursive(Node* p);
+    void completeDebugPrint(std::string xx);
+    
 protected:
+    
+
 
     void calculateUpdateWeights();
 
@@ -125,6 +138,8 @@ protected:
     virtual double calculateLogQRatioJump() = 0;
 
     virtual BranchEvent* newBranchEventFromLastDeletedEvent() = 0;
+    
+
 
     Random& _random;
     Settings& _settings;
@@ -170,7 +185,13 @@ protected:
 
     // Temperature parameter for Metropolis coupling:
     double _temperatureMH;
+
+    // FOr USE_FAST
+    bool _isNewProposal;
+    int _debugCounter;
+    
 };
+
 
 
 inline Tree* Model::getTreePtr()
@@ -272,6 +293,16 @@ inline double Model::getTemperatureMH()
 inline double Model::logQRatioJump()
 {
     return _logQRatioJump;
+}
+
+inline bool Model::getIsNewProposal()
+{
+    return _isNewProposal;
+}
+
+inline void Model::setIsNewProposal(bool x)
+{
+    _isNewProposal = x;
 }
 
 

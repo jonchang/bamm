@@ -1,3 +1,4 @@
+#include "global_macros.h"
 #include "MuInitProposal.h"
 #include "Random.h"
 #include "Settings.h"
@@ -43,8 +44,17 @@ void MuInitProposal::revertToOldParameterValue()
 
 void MuInitProposal::updateParameterOnTree()
 {
+    
+#ifdef USE_FAST
+    _tree->setNodeSpeciationParameters(_event->getEventNode());
+    _tree->setNodeExtinctionParameters(_event->getEventNode());
+    _tree->recursiveSetAreParamsCurrentToRoot(_event->getEventNode());
+#else
     _tree->setNodeSpeciationParameters();
     _tree->setNodeExtinctionParameters();
+#endif
+ 
+
 }
 
 

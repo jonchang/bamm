@@ -7,6 +7,8 @@
 #include "Random.h"
 #include "Log.h"
 
+#include "global_macros.h"
+
 
 BranchEvent::BranchEvent(Node* x, Tree* tp, Random& random, double map) :
     mapTime(map), nodeptr(x), treePtr(tp), _random(random),

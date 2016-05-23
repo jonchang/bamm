@@ -6,6 +6,8 @@
 #include "Tree.h"
 #include "TraitBranchEvent.h"
 
+#include "global_macros.h"
+
 
 BetaShiftProposal::BetaShiftProposal
     (Random& random, Settings& settings, Model& model, Prior& prior) :

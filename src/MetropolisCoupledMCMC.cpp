@@ -8,6 +8,9 @@
 #include "ModelDataWriter.h"
 #include "ChainSwapDataWriter.h"
 
+#include "global_macros.h"
+
+
 #include <algorithm>
 #include <thread>
 

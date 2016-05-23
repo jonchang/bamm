@@ -35,7 +35,12 @@ public:
     int getNumberOfJumpEvents();
     int getNumberOfRateShiftEvents();
     double getRootState();
-
+    
+    // Virtual function but only used for SpExModel
+    virtual void revertLikelihoodNodeParams();
+    
+    virtual void printEventData();
+    
 private:
 
     virtual void setRootEventWithReadParameters

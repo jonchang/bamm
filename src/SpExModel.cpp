@@ -1,3 +1,5 @@
+#include "global_macros.h"
+
 #include "SpExModel.h"
 #include "Model.h"
 #include "Random.h"
@@ -28,6 +30,8 @@
 #define JUMP_VARIANCE_NORMAL 0.05
 
 #define NEVER_RECOMPUTE_E0
+
+
 
 SpExModel::SpExModel(Random& random, Settings& settings) :
     Model(random, settings)
@@ -174,7 +178,10 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
     }
     
     setCurrentLogLikelihood(computeLogLikelihood());
-
+#ifdef USE_FAST
+    revertLikelihoodNodeParams();
+#endif
+    
     if (std::isinf(getCurrentLogLikelihood())) {
         log(Error) << "Initial log-likelihood is infinity.\n"
             << "Please check your initial parameter values.\n";
@@ -316,8 +323,24 @@ double SpExModel::muShiftParameter(const std::vector<std::string>& parameters)
 
 void SpExModel::setMeanBranchParameters()
 {
+
+#ifdef USE_FAST
+    _tree->setNodeSpeciationParameters();
+    _tree->setNodeExtinctionParameters();    
+#else
+
+    // TODO: why was BAMM using this
+    // before 2016-05-19? Did not hurt
+    // but no need to reset mean branch
+    // parameters, only node parameters. Wasteful.
+    
     _tree->setMeanBranchSpeciation();
-    _tree->setMeanBranchExtinction();
+     _tree->setMeanBranchExtinction();
+#endif
+
+    //_tree->setNodeSpeciationParameters();
+    //_tree->setNodeExtinctionParameters();
+    
 }
 
 void SpExModel::setMeanBranchParameters(Node* x)
@@ -431,11 +454,8 @@ BranchEvent* SpExModel::newBranchEventFromLastDeletedEvent()
  
 double SpExModel::computeLogLikelihood()
 {
-    if (_sampleFromPriorOnly)
+     if (_sampleFromPriorOnly)
         return 0.0;
- 
-
-    
     
     double logLikelihood = 0.0;
 
@@ -448,19 +468,41 @@ double SpExModel::computeLogLikelihood()
         Node* node = postOrderNodes[i];
         node->setHasDownstreamRateShift(false);
     }    
+
+#ifdef EARLY_REJECT
+    double previousLikelihood = 0.0;
+//    double bterm = 0.0;
+//    double nterm = 0.0;
+#endif
     
     for (int i = 0; i < numNodes; i++) {
         Node* node = postOrderNodes[i];
         
         if (node->isInternal()) {
-            
+ 
             double LL = computeSpExProbBranch(node->getLfDesc());
             double LR = computeSpExProbBranch(node->getRtDesc());
+
+#ifdef EARLY_REJECT
+            previousLikelihood += node->getLfDesc()->getLogDiCurrent();
+            previousLikelihood += node->getRtDesc()->getLogDiCurrent();
             
+#endif
+            
+            
+ 
 #ifdef NEVER_RECOMPUTE_E0
             
+
+#ifdef USE_FAST
+            double E_left = node->getLfDesc()->getExProbProposed();
+            double E_right = node->getRtDesc()->getExProbProposed();
+#else
             double E_left = node->getLfDesc()->getExtinctionEnd();
             double E_right = node->getRtDesc()->getExtinctionEnd();
+#endif
+            
+
             
             bool left_shift = node->getLfDesc()->getHasDownstreamRateShift();
             bool right_shift = node->getRtDesc()->getHasDownstreamRateShift();
@@ -527,12 +569,22 @@ double SpExModel::computeLogLikelihood()
             
             logLikelihood += (LL + LR);
 
+            
             // Does not include root node, so it is conditioned
             // on basal speciation event occurring:
             if (node != _tree->getRoot()) {
                 logLikelihood  += log(node->getNodeLambda());
 
                 node->setDinit(1.0);
+            
+#ifdef EARLY_REJECT
+                
+                previousLikelihood += log(node->getPreviousNodeLambda());
+                
+                if (logLikelihood < (previousLikelihood - (double)5.0) && std::fabs(LL) > 0.00001){
+                     return -INFINITY;
+                }
+#endif
             }
         }
     }
@@ -541,8 +593,7 @@ double SpExModel::computeLogLikelihood()
     if (_hasPaleoData){
         logLikelihood += computePreservationLogProb();  
     }
-
-    
+    // std::cout << previousLikelihood << "\t" << logLikelihood << std::endl;
     return logLikelihood;
 }
 
@@ -550,6 +601,20 @@ double SpExModel::computeLogLikelihood()
 double SpExModel::computeSpExProbBranch(Node* node)
 {
  
+#ifdef USE_FAST
+    if (node->getProposedUpdate() == false){
+        node->setLogDiProposed(node->getLogDiCurrent());
+        node->setExProbProposed(node->getExProbCurrent());
+        return node->getLogDiProposed();
+    }
+ 
+#endif
+ 
+    //std::cout << node << "\tComputeSpExpProbBranch LogL prop init\t" << node->getLogDiProposed() << "\tCurr ";
+    //std::cout << node->getLogDiCurrent() << std::endl;
+    
+    
+    
     int n_events = node->getBranchHistory()->getNumberOfBranchEvents();
     
     if (n_events > 0){
@@ -800,6 +865,18 @@ double SpExModel::computeSpExProbBranch(Node* node)
          logLikelihood -= std::log(1.0 - E0);
     }
  
+    //std::cout << node->getNodeParamsAreCurrent() << "\t" << node->getLogDiEnd() << "\t" << logLikelihood << std::endl;
+    
+#ifdef USE_FAST
+    
+    node->setLogDiProposed(logLikelihood);
+    node->setExProbProposed(E0);
+ 
+    //std::cout << node << "\tLogL prop\t" << node->getLogDiProposed() << "\tCurr " << node->getLogDiCurrent();
+    //std::cout << "\tlval: " << logLikelihood << std::endl;
+    
+    
+#endif
     
     return logLikelihood;
 }
@@ -1103,6 +1180,134 @@ void SpExModel::checkModel()
     std::cout << "SpExModel::checkModel() " << std::endl;
 }
 
+
+// These are also in Model class
+// but reimplemented here to allow USE_FAST compilation
+// Flag node params etc...
+
+void SpExModel::forwardSetBranchHistories(BranchEvent* x)
+{
+ 
+    
+    // If there is another event occurring more recent (closer to tips),
+    // do nothing. Even just sits in BranchHistory but doesn't affect
+    // state of any other nodes.
+    
+    // This seems circular, but what else to do?
+    // given an event (which references the node defining the branch on which
+    // event occurs) you get the corresponding branch history and the last
+    // event since the events will have been inserted in the correct order.
+    
+    if (x->getIsEventValidForNode() == false){
+        std::cout << "ERROR forwardSetBranchHistories(BranchEvent* x) / passed jump node" << std::endl;
+        exit(0);
+    }
+    
+    Node* myNode = x->getEventNode();
+    
+    myNode->setProposedUpdate(true);
+    
+    if (x == _rootEvent) {
+        forwardSetHistoriesRecursive(myNode->getLfDesc());
+        forwardSetHistoriesRecursive(myNode->getRtDesc());
+    } else if (x == myNode->getBranchHistory()->getLastEvent()) {
+        // If true, x is the most tip-wise event on branch.
+        myNode->getBranchHistory()->setNodeEvent(x);
+        
+        // If myNode is not a tip
+        if (myNode->getLfDesc() != NULL && myNode->getRtDesc() != NULL) {
+            forwardSetHistoriesRecursive(myNode->getLfDesc());
+            forwardSetHistoriesRecursive(myNode->getRtDesc());
+        }
+        // Else: node is a tip; do nothing
+    }
+    // Else: there is another more tipwise event on the same branch; do nothing
+
+    // Set param flags back to root...
+    
+    _tree->recursiveSetAreParamsCurrentToRoot(myNode);
+    
+}
+
+
+/*
+ If this works correctly, this will take care of the following:
+ 1. if a new event is created or added to tree,
+ this will forward set all branch histories from the insertion point
+ 2. If an event is deleted, you find the next event rootwards,
+ and call forwardSetBranchHistories from that point. It will replace
+ settings due to the deleted node with the next rootwards node.
+ */
+
+void SpExModel::forwardSetHistoriesRecursive(Node* p)
+{
+    // Get event that characterizes parent node
+    BranchEvent* lastEvent = p->getAnc()->getBranchHistory()->getNodeEvent();
+    
+    p->setProposedUpdate(true);
+    
+    if (lastEvent->getIsEventValidForNode() == false){
+        std::cout << "ERROR forwardSetHistoriesRecursive(Node* p) / passed jump node" << std::endl;
+        exit(0);
+    }
+    
+    // Set the ancestor equal to the event state of parent node:
+    p->getBranchHistory()->setAncestralNodeEvent(lastEvent);
+    
+    // Ff no events on the branch, go down to descendants and do same thing;
+    // otherwise, process terminates (because it hits another event on branch
+    if (p->getBranchHistory()->getNumberOfBranchEvents() == 0) {
+        p->getBranchHistory()->setNodeEvent(lastEvent);
+        
+        if (p->getLfDesc() != NULL) {
+            forwardSetHistoriesRecursive(p->getLfDesc());
+        }
+        
+        if (p->getRtDesc() != NULL) {
+            forwardSetHistoriesRecursive(p->getRtDesc());
+        }
+    }
+}
+
+// only called if accept...
+void SpExModel::revertLikelihoodNodeParams()
+{
+    //std::cout << "SpExModel::revertLikelihoodNodeParams()" << std::endl;
+    int numNodes = _tree->getNumberOfNodes();
+    const std::vector<Node*>& postOrderNodes = _tree->postOrderNodes();
+    
+    for (int i = 0; i < numNodes; i++) {
+    
+        Node* node = postOrderNodes[i];
+    
+        node->setLogDiCurrent(node->getLogDiProposed());
+        node->setExProbCurrent(node->getExProbProposed());
+        node->setProposedUpdate(false);
+        
+#ifdef EARLY_REJECT
+        node->setPreviousNodeLambda(node->getNodeLambda());
+#endif
+ 
+    }
+
+}
+
+
+void SpExModel::printEventData()
+{
+
+    EventSet::iterator it;
+    for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it) {
+        SpExBranchEvent* xx = static_cast<SpExBranchEvent*>(*it);
+        std::cout << (*it)->getEventNode() << "\t" << xx->getLamInit();
+        std::cout << "\t" << xx->getAbsoluteTime() << std::endl;
+        
+    }
+    SpExBranchEvent* xx = static_cast<SpExBranchEvent*>(_rootEvent);
+    std::cout << "rootnode:\t"  << xx->getLamInit() << "\t";
+    std::cout << "\t" << xx->getAbsoluteTime() << std::endl;
+    
+}
 
 
 

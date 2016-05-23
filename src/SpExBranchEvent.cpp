@@ -1,5 +1,8 @@
 #include "SpExBranchEvent.h"
 
+#include "global_macros.h"
+
+
 class Node;
 class Tree;
 class Random;

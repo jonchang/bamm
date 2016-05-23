@@ -8,6 +8,9 @@
 #include "Log.h"
 #include "Stat.h"
 
+#include "global_macros.h"
+
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -64,6 +67,8 @@ Tree::Tree(Random& random, Settings& settings) : _random(random)
             (settings.get<int>("minCladeSizeForShift"));
         setTreeMap(getRoot());
     } else if (settings.get("modeltype") == "trait") {
+        
+        // TODO: is there a reason to not allow this for traitModel?
         setAllNodesCanHoldEvent();
         setTreeMap(getRoot());
         getPhenotypesMissingLatent(settings.get("traitfile"));
@@ -744,15 +749,7 @@ void Tree::writeMeanBranchTraitRateTree(Node* p, std::stringstream& ss)
 }
 
 
-/*
 
- Set mean speciation rates on each branch by going over all nodes
- and accessing BranchHistory attribute.
-
- If multiple events on a particular branch, the meanBranchRate is
- just the arithmetic average of the rates (for now, anyway).
-
- */
 
 void Tree::setNodeSpeciationParameters()
 {
@@ -769,6 +766,173 @@ void Tree::setNodeExtinctionParameters()
         (*i)->computeAndSetNodeExtinctionParams();
     }
 }
+
+void Tree::setNodeSpeciationParameters(Node* x)
+{
+    x->computeAndSetNodeSpeciationParams();
+    x->setProposedUpdate(true);
+    
+    //std::cout << "setNodeSpeciationParameters / " << x << std::endl;
+    // std::cout << "Flagging " << x << std::endl;
+    
+    if (x->getLfDesc() != NULL){
+        if (x->getLfDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+            && x->getLfDesc()->getCanHoldEvent()){
+            
+            
+            setNodeSpeciationParameters(x->getLfDesc());
+        
+        }else{
+            // std::cout << "Flagging " << x->getLfDesc() << std::endl;
+            x->getLfDesc()->setProposedUpdate(true);
+        }
+    }
+    
+    if (x->getRtDesc() != NULL){
+        if (x->getRtDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+            && x->getRtDesc()->getCanHoldEvent()){
+            
+            
+            setNodeSpeciationParameters(x->getRtDesc());
+            
+        }else{
+            // std::cout << "Flagging " << x->getRtDesc() << std::endl;
+            x->getRtDesc()->setProposedUpdate(true);
+        }
+    }
+    
+/*
+    if (x->getRtDesc() != NULL){
+        
+    }
+    
+    if (x->getBranchHistory()->getNumberOfBranchEvents() == 0){
+         if (x->getLfDesc() != NULL){
+            if (x->getLfDesc()->getCanHoldEvent()){
+                //std::cout << "Visiting lf desc ... " << std::endl;
+                setNodeSpeciationParameters(x->getLfDesc());
+            }
+        }
+        if (x->getRtDesc() != NULL){
+            if (x->getRtDesc()->getCanHoldEvent()){
+                setNodeSpeciationParameters(x->getRtDesc());
+            }
+        }    
+    
+    }
+*/
+    
+/*
+    if (x->getLfDesc() != NULL){
+        if (x->getLfDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+                && x->getLfDesc()->getCanHoldEvent()){
+             setNodeSpeciationParameters(x->getLfDesc());
+        }
+    }
+    if (x->getRtDesc() != NULL){
+        if (x->getRtDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+                && x->getRtDesc()->getCanHoldEvent()){
+            setNodeSpeciationParameters(x->getRtDesc());
+        }
+    }
+*/
+    
+ }
+
+
+void Tree::setNodeExtinctionParameters(Node* x)
+{
+
+    x->computeAndSetNodeExtinctionParams();
+    x->setProposedUpdate(true);
+
+    if (x->getLfDesc() != NULL){
+        if (x->getLfDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+            && x->getLfDesc()->getCanHoldEvent()){
+            
+            
+            setNodeExtinctionParameters(x->getLfDesc());
+            
+        }else{
+            // std::cout << "Flagging " << x->getLfDesc() << std::endl;
+            x->getLfDesc()->setProposedUpdate(true);
+        }
+    }
+    
+    if (x->getRtDesc() != NULL){
+        if (x->getRtDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+            && x->getRtDesc()->getCanHoldEvent()){
+            
+            
+            setNodeExtinctionParameters(x->getRtDesc());
+            
+        }else{
+            // std::cout << "Flagging " << x->getRtDesc() << std::endl;
+            x->getRtDesc()->setProposedUpdate(true);
+        }
+    }
+    
+/*
+    if (x->getBranchHistory()->getNumberOfBranchEvents() == 0){
+        if (x->getLfDesc() != NULL){
+            if (x->getLfDesc()->getCanHoldEvent()){
+                setNodeExtinctionParameters(x->getLfDesc());
+            }
+        }
+        if (x->getRtDesc() != NULL){
+            if (x->getRtDesc()->getCanHoldEvent()){
+                setNodeExtinctionParameters(x->getRtDesc());
+            }
+        }
+    
+    }
+*/
+    
+/*
+    if (x->getLfDesc() != NULL){
+        if (x->getLfDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+                && x->getLfDesc()->getCanHoldEvent()){
+            setNodeExtinctionParameters(x->getLfDesc());
+        }
+    }
+    if (x->getRtDesc() != NULL){
+        if (x->getRtDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
+                && x->getRtDesc()->getCanHoldEvent()){
+            setNodeExtinctionParameters(x->getRtDesc());
+        }
+    }
+*/
+    
+}
+
+void Tree::recursiveSetAreParamsCurrentToRoot(Node* x)
+{
+    x->setProposedUpdate(true);
+    //std::cout << "recursiveSetAreParamsCurrentToRoot //" << x << "\tvalue set to ";
+    // std::cout << x->getProposedUpdate() << std::endl;
+
+    
+    if (x->getAnc() != NULL){
+        recursiveSetAreParamsCurrentToRoot(x->getAnc());
+    }
+}
+
+void Tree::printNodeUpdateStatus()
+{
+    for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
+         i != _preOrderNodes.end(); ++i){
+        std::cout << (*i) << "\tStatus: " <<  (*i)->getProposedUpdate() << std::endl;
+    }
+}
+
+void Tree::globalSetAllNodesNewUpdate()
+{
+    for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
+         i != _preOrderNodes.end(); ++i) {
+        (*i)->setProposedUpdate(true);
+    }
+}
+
 
 
 // Update both mean speciation rates on branch in addition to node speciation rate.
@@ -789,6 +953,25 @@ void Tree::setMeanBranchExtinction()
             i != _preOrderNodes.end(); ++i) {
         (*i)->computeNodeBranchExtinctionParams();
     }
+}
+
+double Tree::sumNodeLikelihoods()
+{
+    double lik = 0.0;
+    
+    for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
+         i != _preOrderNodes.end(); ++i) {
+
+        if ((*i) != getRoot()){
+            lik += (*i)->getLogDiCurrent();
+            if ((*i)->getLfDesc() != NULL){
+                lik += std::log((*i)->getNodeLambda());
+            }
+            //std::cout << node << "\t" << (*i)->getLogDiCurrent();
+        }
+        
+    }
+    return lik;
 }
 
 
@@ -2023,6 +2206,21 @@ void Tree::debugPrintNodeData(void)
          i != _preOrderNodes.end(); ++i) {
         std::cout << (*i) << "\t" << (*i)->getTraitValue() << "\t" << (*i)->getMeanBeta();
         std::cout << "\t" << (*i)->getNetJump() << std::endl;
+    }
+    
+    
+}
+
+void Tree::debugPrintNodeDataSpEx()
+{
+ 
+    for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
+         i != _preOrderNodes.end(); ++i) {
+        std::cout << (*i) << "\tBL: " << (*i)->getBrlen() << "\t";
+        std::cout << "canhold: " << (*i)->getCanHoldEvent() << "\t";
+        std::cout << (*i)->getProposedUpdate() << "\t";
+        std::cout << (*i)->getLogDiCurrent() << "\t";
+        std::cout << (*i)->getLogDiProposed() << std::endl;
     }
     
     

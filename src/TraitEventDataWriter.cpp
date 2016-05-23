@@ -2,6 +2,9 @@
 #include "EventDataWriter.h"
 #include "TraitBranchEvent.h"
 
+#include "global_macros.h"
+
+
 #include <sstream>
 
 class Settings;

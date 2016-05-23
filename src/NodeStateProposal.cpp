@@ -7,6 +7,9 @@
 #include "Node.h"
 #include "Stat.h"
 
+#include "global_macros.h"
+
+
 #include <cstdlib>
 #include <algorithm>
 

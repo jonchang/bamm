@@ -2,6 +2,9 @@
 #include "Settings.h"
 #include "Model.h"
 
+#include "global_macros.h"
+
+
 #include <iostream>
 #include <string>
 

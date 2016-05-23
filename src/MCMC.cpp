@@ -3,6 +3,9 @@
 #include "Model.h"
 #include "ModelFactory.h"
 
+#include "global_macros.h"
+
+
 #include <climits>
 
 #define DEBUG_MCMC 
@@ -60,10 +63,10 @@ void MCMC::step()
 
     double acceptanceRatio = _model->acceptanceRatio();
     if (_random.trueWithProbability(acceptanceRatio)) {
-        // std::cout << "MCMC::step() ACCEPT " << std::endl;
+        //std::cout << "MCMC::step() ACCEPT " << std::endl;
         _model->acceptProposal();
     } else {
-        // std::cout << "MCMC::step() REJECT " << std::endl;
+        //std::cout << "MCMC::step() REJECT " << std::endl;
         _model->rejectProposal();
     }
 
@@ -73,10 +76,20 @@ void MCMC::step()
 #endif
     
 #ifdef FAIL_CHECK
+    
     logL_compute = _model->computeLogLikelihood();
     delta = std::fabs(logL_compute - _model->getCurrentLogLikelihood());
+    
+     //_model->printEventData();
+    //std::cout << "\nupdateStatus after MCMC update" << std::endl;
+    //_model->printNodeUpdateStatus();
+    //std::cout << "MCMC logLike after: " << _model->getCurrentLogLikelihood() << std::endl;
+    //std::cout << "Last parm updated: " << _model->getLastParameterUpdated() << "\tAccept: ";
+    //std::cout << _model->getAcceptLastUpdate() << std::endl;
     if (delta > 0.0000001){
-        std::cout << "\tNoMatch1: " << logL_compute << "\t" << _model->getCurrentLogLikelihood() << std::endl;
+        std::cout << "\tMCMC::step() NoMatch1: " << logL_compute << "\t" << _model->getCurrentLogLikelihood() << std::endl;
+        std::cout << "Last parm updated: " << _model->getLastParameterUpdated() << "\tAccept: ";
+        std::cout << _model->getAcceptLastUpdate() << std::endl;
         exit(0);
     }
 #endif 

@@ -1,5 +1,8 @@
 #include "TraitBranchEvent.h"
 
+#include "global_macros.h"
+
+
 class Random;
 class Node;
 class Tree;

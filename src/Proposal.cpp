@@ -1,5 +1,8 @@
 #include "Proposal.h"
 
+#include "global_macros.h"
+
+
 
 Proposal::~Proposal()
 {

@@ -3,6 +3,9 @@
 #include "Settings.h"
 #include "Model.h"
 
+#include "global_macros.h"
+
+
 #include <algorithm>
 
 
@@ -37,6 +40,10 @@ void EventNumberProposal::propose()
     _proposedEventCount = _model.getNumberOfEvents();
     _proposedLogLikelihood = _model.computeLogLikelihood();
     _proposedLogPrior = _model.computeLogPrior();
+    
+    // std::cout << "Current from node current " << _model.sumNodeLikelihoods() << std::endl;
+    // std::cout << "EventNumberProposal::propose() proposed LogL : " << _proposedLogLikelihood << std::endl;
+    
 }
 
 
@@ -56,13 +63,23 @@ void EventNumberProposal::accept()
 void EventNumberProposal::reject()
 {
     if (_lastProposal == AddEvent) {
+        
+        //std::cout << " EventNumberProposal::reject() // about to remove event from tree" << std::endl;
+        
         _model.removeEventFromTree(_lastEventChanged);
         _model.setMeanBranchParameters();
         delete _lastEventChanged;
         _lastEventChanged = NULL;
     } else if (_lastProposal == RemoveEvent) {
+        // std::cout << " EventNumberProposal::reject() // about to add previous event" << std::endl;
+        
         _model.addEventToTree(_lastEventChanged);
     }
+    
+    // double ll = _model.computeLogLikelihood();
+    
+    // std::cout << "done with EventNumberProposal::reject()" << "\tcurr LogL" << _model.getCurrentLogLikelihood();
+    // std::cout << "\tcomputed: " << ll << std::endl;
 }
 
 

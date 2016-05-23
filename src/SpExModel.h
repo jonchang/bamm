@@ -46,7 +46,10 @@ public:
     void   printNodeProbs();
 
     virtual void checkModel();
-
+    virtual void forwardSetBranchHistories(BranchEvent* x);
+    virtual void forwardSetHistoriesRecursive(Node* p);
+    virtual void revertLikelihoodNodeParams();
+    virtual void printEventData();
 private:
 
     virtual void setRootEventWithReadParameters
@@ -140,6 +143,8 @@ private:
     bool _alwaysRecomputeE0;
     
     std::string _combineExtinctionAtNodes;
+    
+    // USE_FAST macro
     
     
     

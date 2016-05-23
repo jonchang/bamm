@@ -21,6 +21,9 @@
 #include "NodeStateProposal.h"
 #include "JumpProposal.h"
 
+#include "global_macros.h"
+
+
 //#include "JumpVarianceProposal.h"
 
 #include "Log.h"
@@ -558,3 +561,18 @@ double TraitModel::getRootState()
 {
     return _tree->getRoot()->getTraitValue();
 }
+
+
+void TraitModel::revertLikelihoodNodeParams()
+{
+
+}
+
+
+void TraitModel::printEventData()
+{
+
+
+}
+
+

@@ -4,6 +4,9 @@
 #include "Model.h"
 #include "Prior.h"
 #include "SpExModel.h"
+
+#include "global_macros.h"
+
 #include <algorithm>
 
 PreservationRateProposal::PreservationRateProposal

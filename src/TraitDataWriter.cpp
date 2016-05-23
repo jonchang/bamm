@@ -4,6 +4,9 @@
 #include "TraitModel.h"
 #include "TraitModelParamsDataWriter.h"
 
+#include "global_macros.h"
+
+
 class Settings;
 class Model;
 

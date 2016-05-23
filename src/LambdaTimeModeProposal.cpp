@@ -1,4 +1,5 @@
 #include "LambdaTimeModeProposal.h"
+#include "global_macros.h"
 
 #include "Settings.h"
 #include "Prior.h"

@@ -246,6 +246,16 @@ public:
     std::vector<double> traitValues();
     
     void debugPrintNodeData(void);
+    
+    // USE_FAST stuff
+    void setNodeSpeciationParameters(Node* x);
+    void setNodeExtinctionParameters(Node* x);
+    void recursiveSetAreParamsCurrentToRoot(Node* x);
+    
+    double sumNodeLikelihoods();
+    void printNodeUpdateStatus();
+    void globalSetAllNodesNewUpdate();
+    void debugPrintNodeDataSpEx();
 };
 
 

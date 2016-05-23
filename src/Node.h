@@ -77,7 +77,7 @@ private:
     bool _canHoldEvent;
     
     // HOlds value of Extinction probability at end of branch
-    double _eEnd;
+    double _eEnd; // remove
     
     // determines whether the descendants of a node have
     // a rates shift somewhere in their history
@@ -86,6 +86,24 @@ private:
     
     bool _inheritFromLeft;
     
+    // For experimental speedup: USE_FAST macro
+    double _logDi_End;   // remove
+    double _logDi_End_last; // remove
+    
+    bool   _nodeParamsAreCurrent;  // remove
+    bool   _lastNodeParamsAreCurrent;  // remove
+    
+    double _eEndLast; // remove
+    
+    double _logDi_proposed;
+    double _logDi_current;
+    
+    double _exProb_proposed;
+    double _exProb_current;
+    
+    bool _proposedUpdate;
+    
+    double _previousLambda;
 
 public:
 
@@ -240,7 +258,161 @@ public:
     bool getInheritFromLeft(void);
     void setInheritFromLeft(bool x);
     
+    // USE_FAST macro options
+    void setLogDiEnd(double x);
+    double getLogDiEnd();
+    
+    void setLogDiEndLast(double x);
+    double getLogDiEndLast();
+    
+    double getExtinctionEndLast(void);
+    void setExtinctionEndLast(double x);
+    
+    bool getLastNodeParamsAreCurrent();
+    void setLastNodeParamsAreCurrent(bool x);
+    
+    bool getNodeParamsAreCurrent();
+    void setNodeParamsAreCurrent(bool x);
+    
+    bool getProposedUpdate();
+    void setProposedUpdate(bool);
+    
+    double getLogDiProposed();
+    void setLogDiProposed(double);
+    
+    double getLogDiCurrent();
+    void setLogDiCurrent(double);
+    
+    double getExProbProposed();
+    void setExProbProposed(double);
+    
+    double getExProbCurrent();
+    void setExProbCurrent(double);
+    
+    double getPreviousNodeLambda();
+    void setPreviousNodeLambda(double x);
+    
 };
+
+// USE_FAST macro functions
+
+inline double Node::getPreviousNodeLambda()
+{
+    return _previousLambda;
+}
+
+inline void Node::setPreviousNodeLambda(double x)
+{
+    _previousLambda = x;
+}
+
+inline bool Node::getProposedUpdate()
+{
+    return _proposedUpdate;
+}
+
+inline void Node::setProposedUpdate(bool x)
+{
+    _proposedUpdate = x;
+}
+
+inline double Node::getLogDiProposed()
+{
+    return _logDi_proposed;
+}
+
+inline void Node::setLogDiProposed(double x)
+{
+    _logDi_proposed = x;
+}
+
+inline double Node::getLogDiCurrent()
+{
+    return _logDi_current;
+}
+
+inline void Node::setLogDiCurrent(double x)
+{
+    _logDi_current = x;
+}
+
+inline double Node::getExProbProposed()
+{
+    return _exProb_proposed;
+}
+
+inline void Node::setExProbProposed(double x)
+{
+    _exProb_proposed = x;
+}
+
+inline double Node::getExProbCurrent()
+{
+    return _exProb_current;
+}
+
+inline void Node::setExProbCurrent(double x)
+{
+    _exProb_current = x;
+}
+
+// Preceding block of functions OK... following block deprecated
+
+
+inline void Node::setLogDiEnd(double x)
+{
+    _logDi_End = x;
+}
+
+inline double Node::getLogDiEnd()
+{
+    return _logDi_End;
+}
+
+inline void Node::setLogDiEndLast(double x)
+{
+    _logDi_End_last = x;
+}
+
+inline double Node::getLogDiEndLast()
+{
+    return _logDi_End_last;
+}
+
+
+inline void Node::setLastNodeParamsAreCurrent(bool x)
+{
+    _lastNodeParamsAreCurrent = x;
+}
+
+inline bool Node::getLastNodeParamsAreCurrent()
+{
+    return _lastNodeParamsAreCurrent;
+}
+
+inline void Node::setNodeParamsAreCurrent(bool x)
+{
+    _nodeParamsAreCurrent = x;
+}
+
+inline bool Node::getNodeParamsAreCurrent()
+{
+    return _nodeParamsAreCurrent;
+}
+
+inline void Node::setExtinctionEndLast(double x)
+{
+    _eEndLast = x;
+}
+
+inline double Node::getExtinctionEndLast(void)
+{
+    return _eEndLast;
+}
+
+
+// preceding block deprecated
+
 
 
 inline void Node::setLfDesc(Node* x)

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "global_macros.h"
 
 EventParameterProposal::EventParameterProposal
     (Random& random, Settings& settings, Model& model, Prior& prior) :
@@ -19,45 +20,55 @@ EventParameterProposal::EventParameterProposal
 
 void EventParameterProposal::propose()
 {
-    _currentLogLikelihood = _model.getCurrentLogLikelihood();
+    //_model.completeDebugPrint("EventParameterProposal::proposed() START");
 
-    double ll = _model.computeLogLikelihood();
-    double delta = std::fabs(ll - _currentLogLikelihood);
-    if (delta > 0.0000001){
-        std::cout << "\tNoMatch1 EPP: " << ll << "\t" << _currentLogLikelihood << std::endl;
-        //exit(0);
-    }
     
+    _currentLogLikelihood = _model.getCurrentLogLikelihood();
+ 
     _event = _model.chooseEventAtRandom(true);
     _currentParameterValue = getCurrentParameterValue();
-
     _proposedParameterValue = computeNewParameterValue();
+   
+    //std::cout << "Node: " << _event->getEventNode() << "\tCurrPar: " << _currentParameterValue;
+    //std::cout << "\tProposed par: " << _proposedParameterValue << std::endl;
+    
     setProposedParameterValue();
-
     updateParameterOnTree();
 
     _proposedLogLikelihood = _model.computeLogLikelihood();
+    //_model.completeDebugPrint("EventParameterProposal::proposed() END");
 
-    ll = _model.computeLogLikelihood();
-    delta = std::fabs(ll - _proposedLogLikelihood);
-    if (delta > 0.0000001){
-        std::cout << "\tNoMatch2 EPP: " << ll << "\tproposed (stored)" << _proposedLogLikelihood << std::endl;
-        //exit(0);
-    }
 }
 
 
 void EventParameterProposal::accept()
 {
     _model.setCurrentLogLikelihood(_proposedLogLikelihood);
+    
+    //_model.completeDebugPrint("EventParameterProposal::reject // after setCurrentLogLikelihood");
+    
 }
 
 
 void EventParameterProposal::reject()
 {
+    
+    // std::cout << "EventParameterProposal::reject() // Event data before reverting::" << std::endl;
+    // _model.printEventData();
+    // _model.computeLogLikelihood();
+    
+    
     revertToOldParameterValue();
     updateParameterOnTree();
- }
+    
+    //_model.completeDebugPrint("EventParameterProposal::reject // after reverting");
+
+
+    // std::cout << "EventParameterProposal::reject() // Event data AFTER reverting::" << std::endl;
+    // _model.printEventData();
+    // _model.computeLogLikelihood();
+    
+}
 
 
 double EventParameterProposal::acceptanceRatio()

@@ -9,6 +9,9 @@
 #include "BranchHistory.h"
 #include "SpExBranchEvent.h"
 
+#include "global_macros.h"
+
+
 
 Node::Node()
 {
@@ -67,6 +70,21 @@ void Node::init(int x)
     _eEnd = -1.0;
     _hasDownstreamRateShift = false;
     _inheritFromLeft = false;
+    
+    // for USE_FAST compilation
+    _logDi_End = 0.0;
+    _logDi_End_last = 0.0;
+    _nodeParamsAreCurrent = false;
+    _lastNodeParamsAreCurrent = false;
+    
+    _proposedUpdate = true;
+    _logDi_proposed = 0.0;
+    _logDi_current = 0.0;
+    _exProb_proposed = 0.0;
+    _exProb_current = 0.0;
+    
+    _previousLambda = 0.0;
+ 
 }
 
 

@@ -6,6 +6,9 @@
 #include "BranchHistory.h"
 #include "Tree.h"
 
+#include "global_macros.h"
+
+
 #include <algorithm>
 
 
@@ -31,6 +34,8 @@ void MoveEventProposal::propose()
         return;
     }
 
+    //_model.completeDebugPrint("MoveEventProposa::propose() START");
+    
     _event = _model.chooseEventAtRandom();
     _currentLogLikelihood = _model.getCurrentLogLikelihood();
 
@@ -60,6 +65,8 @@ void MoveEventProposal::propose()
         _model.forwardSetBranchHistories(_event);
         _model.setMeanBranchParameters();
     
+        //std::cout << "MEP::propose() 1 " << std::endl;
+        
     }else{
 
         _event->getEventNode()->getBranchHistory()->
@@ -89,6 +96,12 @@ void MoveEventProposal::propose()
 
 
     _proposedLogLikelihood = _model.computeLogLikelihood();
+    //_model.globalSetAllNodesNewUpdate();
+ 
+    //std::cout << "MoveEventProposal::propose() _proposed LogL " << _proposedLogLikelihood;
+    //std::cout << "\tAfterREset: " << _model.computeLogLikelihood();
+    //std::cout << "\tCurrStored: " << _currentLogLikelihood << std::endl;
+    //_model.completeDebugPrint("MoveEventProposa::propose() END");
 }
 
 
@@ -99,16 +112,26 @@ void MoveEventProposal::accept()
     }
 
     _model.setCurrentLogLikelihood(_proposedLogLikelihood);
+    
+    //_model.completeDebugPrint("MoveEventProposal::accept // after setCurrentLogLikelihood");
 }
 
 
 void MoveEventProposal::reject()
 {
     if (_currentEventCount == 0) {
-         return;
+          return;
     }
 
+    //std::cout << "start node status in MEP::reject" << std::endl;
+    //std::cout << "intitial LogL " << _model.computeLogLikelihood() << std::endl;
+
+    //std::cout << "after reflag all events" << std::endl;
+    //_model.globalSetAllNodesNewUpdate();
+    //std::cout << "intitial LogL " << _model.computeLogLikelihood() << std::endl;
     
+    //_model.printEventData();
+    //_model.printNodeUpdateStatus();
     
     if (_event->getIsEventValidForNode() == true){
         // Get last event from position of event to be removed
@@ -133,6 +156,14 @@ void MoveEventProposal::reject()
         
         
         
+        //std::cout << "MEP::reject / curstored: " << _model.getCurrentLogLikelihood() << "\tComputed: ";
+        //std::cout << "after branch updates" << _model.computeLogLikelihood() << std::endl;
+        //std::cout << "after reflag all events" << std::endl;
+        //_model.globalSetAllNodesNewUpdate();
+        //std::cout << "intitial LogL " << _model.computeLogLikelihood() << std::endl;
+        //_model.completeDebugPrint("MoveEventProposal::REJECT // after resetting branch histories");
+        
+    
     }else{
  
         // Pop event off its new location
@@ -147,6 +178,9 @@ void MoveEventProposal::reject()
         addEventToBranchHistory(_event);
         _model.setMeanBranchParameters();
      }
+    //std::cout << "end node data in MEP::reject" << std::endl;
+    //_model.printNodeUpdateStatus();
+    //_model.printEventData();
 }
 
 

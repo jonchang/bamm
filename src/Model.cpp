@@ -1,3 +1,5 @@
+#include "global_macros.h"
+
 #include "Model.h"
 #include "Random.h"
 #include "Settings.h"
@@ -32,9 +34,11 @@ Model::Model(Random& random, Settings& settings) :
     _acceptCount = 0;
     _rejectCount = 0;
     _acceptLast = -1;
-
+ 
     _lastDeletedEventMapTime = 0;
 
+    _debugCounter = 0;
+    
     _logQRatioJump = 0.0;
 
     // Initial setting for temperature = 1.0
@@ -42,6 +46,8 @@ Model::Model(Random& random, Settings& settings) :
     // function Model::setModelTemperature
     _temperatureMH = 1.0;
 
+    _isNewProposal = true;
+    
     // Add proposals
     _proposals.push_back(new EventNumberProposal(random, settings, *this));
     _proposals.push_back
@@ -162,7 +168,8 @@ void Model::forwardSetBranchHistories(BranchEvent* x)
     // given an event (which references the node defining the branch on which
     // event occurs) you get the corresponding branch history and the last
     // event since the events will have been inserted in the correct order.
-
+ 
+    
     if (x->getIsEventValidForNode() == false){
         std::cout << "ERROR forwardSetBranchHistories(BranchEvent* x) / passed jump node" << std::endl;
         exit(0);
@@ -252,8 +259,18 @@ void Model::calculateUpdateWeights()
 
 void Model::proposeNewState()
 {
+  
+    //std::cout << "Model::proposeNewState() // summing node likes: " << sumNodeLikelihoods() << std::endl;
+
+#ifdef USE_FAST
+    setIsNewProposal(true);
+#endif
+    
+    
     int parameterToUpdate = chooseParameterToUpdate();
     _lastParameterUpdated = parameterToUpdate;
+    
+   // std::cout << "propose: " << parameterToUpdate << std::endl;
 
     Proposal* proposal = _proposals[parameterToUpdate];
     proposal->propose();
@@ -364,9 +381,7 @@ BranchEvent* Model::removeEventFromTree(BranchEvent* be)
         log(Error) << "Can't delete root event.\n";
         std::exit(1);
     }
-
-    
-    
+ 
     // Two paths depending on whether node is jump or not
     // This could be more efficient but will keep separate now
     
@@ -592,6 +607,7 @@ bool Model::isEventConfigurationValid(BranchEvent* be)
 
 void Model::acceptProposal()
 {
+    //std::cout << "Model::acceptProposal()" << std::endl;
     if (_lastProposal != NULL) {
         _lastProposal->accept();
         _acceptCount++;
@@ -599,11 +615,15 @@ void Model::acceptProposal()
     } else {
         _acceptLast = -1;
     }
+#ifdef USE_FAST
+    revertLikelihoodNodeParams();
+#endif
 }
 
 
 void Model::rejectProposal()
 {
+    //std::cout << "Model::rejectProposal()" << std::endl;
     if (_lastProposal != NULL) {
         _lastProposal->reject();
         _rejectCount++;
@@ -611,6 +631,8 @@ void Model::rejectProposal()
     } else {
         _acceptLast = -1;
     }
+    // summing by node:
+    //std::cout << "Model::rejectProposal() / bynode logL: " << sumNodeLikelihoods() << std::endl;
 }
 
 
@@ -692,14 +714,103 @@ bool Model::testEventConfigurationComprehensive()
     return isValidAll;
 }
 
+double Model::sumNodeLikelihoods()
+{
+    return _tree->sumNodeLikelihoods();
+}
+
+
+void Model::globalSetAllNodesNewUpdate()
+{
+    _tree->globalSetAllNodesNewUpdate();
+}
+
+void Model::printNodeUpdateStatus()
+{
+    _tree->printNodeUpdateStatus();
+}
+
+
+void Model::forwardSetBranchHistoriesSafe(BranchEvent* x)
+{
+ 
+    
+    if (x->getIsEventValidForNode() == false){
+        std::cout << "ERROR forwardSetBranchHistories(BranchEvent* x) / passed jump node" << std::endl;
+        exit(0);
+    }
+    
+    
+    Node* myNode = x->getEventNode();
+    
+    if (x == _rootEvent) {
+        forwardSetHistoriesSafeRecursive(myNode->getLfDesc());
+        forwardSetHistoriesSafeRecursive(myNode->getRtDesc());
+    } else if (x == myNode->getBranchHistory()->getLastEvent()) {
+        // If true, x is the most tip-wise event on branch.
+        myNode->getBranchHistory()->setNodeEvent(x);
+        
+        // If myNode is not a tip
+        if (myNode->getLfDesc() != NULL && myNode->getRtDesc() != NULL) {
+            forwardSetHistoriesSafeRecursive(myNode->getLfDesc());
+            forwardSetHistoriesSafeRecursive(myNode->getRtDesc());
+        }
+        // Else: node is a tip; do nothing
+    }
+    // Else: there is another more tipwise event on the same branch; do nothing
+}
 
 
 
+void Model::forwardSetHistoriesSafeRecursive(Node* p)
+{
+    // Get event that characterizes parent node
+    BranchEvent* lastEvent = p->getAnc()->getBranchHistory()->getNodeEvent();
+    
+    if (lastEvent->getIsEventValidForNode() == false){
+        std::cout << "ERROR forwardSetHistoriesRecursive(Node* p) / passed jump node" << std::endl;
+        exit(0);
+    }
+    
+    // Set the ancestor equal to the event state of parent node:
+    p->getBranchHistory()->setAncestralNodeEvent(lastEvent);
+    
+    // Ff no events on the branch, go down to descendants and do same thing;
+    // otherwise, process terminates (because it hits another event on branch
+    if (p->getBranchHistory()->getNumberOfBranchEvents() == 0) {
+        p->getBranchHistory()->setNodeEvent(lastEvent);
+        
+        if (p->getLfDesc() != NULL) {
+            forwardSetHistoriesSafeRecursive(p->getLfDesc());
+        }
+        
+        if (p->getRtDesc() != NULL) {
+            forwardSetHistoriesSafeRecursive(p->getRtDesc());
+        }
+    }
+}
 
-
-
-
-
+void Model::completeDebugPrint(std::string xx)
+{
+    std::cout << "###   " << _debugCounter << "   #### " << std::endl;
+    std::cout << "\n" << xx << std::endl;
+    
+    std::cout << "current logLik, stored: " << _logLikelihood << std::endl;
+    std::cout << "logLik, computed w current set : " << computeLogLikelihood() << std::endl;
+    std::cout << "proposed, stored: " << _proposedLogLikelihood << std::endl;
+    
+    // Print node data
+    std::cout << "\tPrinting node data" << std::endl;
+    _tree->debugPrintNodeDataSpEx();
+    
+    // Print event data
+    std::cout << "\tPrinting event data" << std::endl;
+    printEventData();
+    
+    std::cout << "\n" << std::endl;
+    
+    _debugCounter++;
+}
 
 
 
