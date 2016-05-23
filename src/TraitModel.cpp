@@ -460,7 +460,7 @@ double TraitModel::computeLogPrior()
             // hierarchical
             //logPrior += _prior.jumpPrior(event->getJump(), _jumpVariance);
   
-            logPrior += std::log(_prior.isEventJumpPrior());
+            //logPrior += std::log(_prior.isEventJumpPrior());
             
         }else{
             logPrior += _prior.betaInitPrior(event->getBetaInit());
@@ -468,7 +468,7 @@ double TraitModel::computeLogPrior()
                 logPrior += dens_term +
                     _prior.betaShiftPrior(event->getBetaShift());
             }
-            logPrior += std::log((1 - _prior.isEventJumpPrior() ) );
+            //logPrior += std::log((1 - _prior.isEventJumpPrior() ) );
         }
     }
 
