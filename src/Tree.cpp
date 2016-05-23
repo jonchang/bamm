@@ -169,8 +169,34 @@ void Tree::setTreeMap(Node* p){
 
  */
 
+
 void Tree::setTreeMap(Node* p)
 {
+    if (p->getCanHoldEvent()){
+        p->setMapStart(_totalMapLength);
+        _totalMapLength += p->getBrlen();
+        p->setMapEnd(_totalMapLength);
+    }
+    
+    if (p->getLfDesc() != NULL){
+        setTreeMap(p->getLfDesc());
+    }
+    
+    if (p->getRtDesc() != NULL){
+        setTreeMap(p->getRtDesc());
+    }
+}
+    
+
+
+
+
+ 
+// OLD VERSION Tree::setTreeMap, Deprecated 2016-05-23
+
+/*
+ void Tree::setTreeMap(Node* p){
+
     p->setMapStart(_totalMapLength);
     _totalMapLength += p->getBrlen();
     p->setMapEnd(_totalMapLength);
@@ -186,6 +212,12 @@ void Tree::setTreeMap(Node* p)
         }
     }
 }
+*/
+
+
+
+
+
 
 /*
 

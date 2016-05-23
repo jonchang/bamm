@@ -12,7 +12,7 @@
 #undef DEBUG_MCMC
 
 #define FAIL_CHECK
-//#undef FAIL_CHECK
+#undef FAIL_CHECK
 
 // Choose a random number up to INT_MAX - 1, not INT_MAX,
 // because MbRandom adds 1 internally, causing an overflow
@@ -42,12 +42,17 @@ void MCMC::step()
 {
 #ifdef DEBUG_MCMC
   
-    std::cout << "\tstored: " << _model->getCurrentLogLikelihood() << "\tActual: ";
-    std::cout << _model->computeLogLikelihood() << std::endl;
+    std::cout << "\tstored: " << _model->getCurrentLogLikelihood();
+    std::cout << "\tActual: " << _model->computeLogLikelihood();
+    std::cout << std::endl;
 
     std::cout << "STEP BEGIN" << std::endl;
     _model->checkModel();
+
+
 #endif
+    //std::cout << "pre-step" << std::endl;
+    //_model->checkModel();
     
 #ifdef FAIL_CHECK
     double logL_compute = _model->computeLogLikelihood();
@@ -66,14 +71,22 @@ void MCMC::step()
         //std::cout << "MCMC::step() ACCEPT " << std::endl;
         _model->acceptProposal();
     } else {
-        //std::cout << "MCMC::step() REJECT " << std::endl;
+        
         _model->rejectProposal();
+        //std::cout << "MCMC::step() REJECT " << _model->getCurrentLogLikelihood() << std::endl;
     }
 
+    //std::cout << "post-step" << std::endl;
+    //_model->checkModel();
+    
 #ifdef DEBUG_MCMC
-    std::cout << "STEP END" << std::endl;
-    _model->checkModel();
+ 
+    
+    
 #endif
+    
+    
+    
     
 #ifdef FAIL_CHECK
     

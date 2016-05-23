@@ -469,6 +469,9 @@ double SpExModel::computeLogLikelihood()
         node->setHasDownstreamRateShift(false);
     }    
 
+    double computeFromStored = 0.0;
+    
+    
 #ifdef EARLY_REJECT
     double previousLikelihood = 0.0;
 //    double bterm = 0.0;
@@ -489,6 +492,8 @@ double SpExModel::computeLogLikelihood()
             
 #endif
             
+            computeFromStored += LL + LR;
+            
             
  
 #ifdef NEVER_RECOMPUTE_E0
@@ -503,6 +508,8 @@ double SpExModel::computeLogLikelihood()
 #endif
             
 
+            
+            
             
             bool left_shift = node->getLfDesc()->getHasDownstreamRateShift();
             bool right_shift = node->getRtDesc()->getHasDownstreamRateShift();
@@ -575,6 +582,8 @@ double SpExModel::computeLogLikelihood()
             if (node != _tree->getRoot()) {
                 logLikelihood  += log(node->getNodeLambda());
 
+                computeFromStored += std::log(node->getNodeLambda());
+                
                 node->setDinit(1.0);
             
 #ifdef EARLY_REJECT
@@ -593,7 +602,13 @@ double SpExModel::computeLogLikelihood()
     if (_hasPaleoData){
         logLikelihood += computePreservationLogProb();  
     }
-    // std::cout << previousLikelihood << "\t" << logLikelihood << std::endl;
+    
+    //std::cout << "Current logLik in SpExModel::computeLogLikelihood: " << logLikelihood << std::endl;
+    //std::cout << "Check model in SpExModel::computeLogLikelihood" << std::endl;
+    //checkModel();
+    //std::cout << "mchecked in SpExModel...." << std::endl;
+    //std::cout << "computed from stored: " << computeFromStored << std::endl;
+    
     return logLikelihood;
 }
 
@@ -601,6 +616,7 @@ double SpExModel::computeLogLikelihood()
 double SpExModel::computeSpExProbBranch(Node* node)
 {
  
+    
 #ifdef USE_FAST
     if (node->getProposedUpdate() == false){
         node->setLogDiProposed(node->getLogDiCurrent());
@@ -1178,6 +1194,32 @@ void SpExModel::outputDebugVectors()
 void SpExModel::checkModel()
 {
     std::cout << "SpExModel::checkModel() " << std::endl;
+ 
+    int numNodes = _tree->getNumberOfNodes();
+    
+    const std::vector<Node*>& postOrderNodes = _tree->postOrderNodes();
+    
+    double llcurrent = 0.0;
+    //double llproposed = 0.0;
+    
+    for (int i = 0; i < numNodes; i++){
+        Node* node = postOrderNodes[i];
+        llcurrent += node->getLogDiCurrent();
+        //llproposed += node->getLogDiProposed();
+        
+        if (node->getLfDesc() != NULL && node != _tree->getRoot()){
+            llcurrent += std::log(node->getNodeLambda());
+        }
+    
+    }
+    
+    double el = std::log(1.0 - _tree->getRoot()->getLfDesc()->getExProbCurrent());
+    double er = std::log(1.0 - _tree->getRoot()->getRtDesc()->getExProbCurrent());
+    
+    llcurrent -= el;
+    llcurrent -= er;
+    std::cout << "Summed logL_current: " << llcurrent << "\tel: " << el << "\ter :" << er << std::endl;
+    
 }
 
 

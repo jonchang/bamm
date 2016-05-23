@@ -270,12 +270,17 @@ void Model::proposeNewState()
     int parameterToUpdate = chooseParameterToUpdate();
     _lastParameterUpdated = parameterToUpdate;
     
-   // std::cout << "propose: " << parameterToUpdate << std::endl;
+    //std::cout << "Model::proposeNewStaete: " << parameterToUpdate << std::endl;
 
     Proposal* proposal = _proposals[parameterToUpdate];
     proposal->propose();
 
     _lastProposal = proposal;
+    
+    // std::cout << "Checking model: " << parameterToUpdate << std::endl;
+    // checkModel();
+    // std::cout << "done check model in proposeNewState" << std::endl;
+    
 }
 
 
@@ -615,9 +620,21 @@ void Model::acceptProposal()
     } else {
         _acceptLast = -1;
     }
+    
 #ifdef USE_FAST
-    revertLikelihoodNodeParams();
+
+// TODO: This if stateement is a DANGEROUS construct
+// If the order of proposals is changed,
+// likelihood calculations will fail
+// This only works if parameter 3 is eventRateProposal
+//  else, bad stuff!
+    
+    if (_lastParameterUpdated != 3){
+        revertLikelihoodNodeParams();
+    }
+
 #endif
+    
 }
 
 
@@ -759,6 +776,7 @@ void Model::forwardSetBranchHistoriesSafe(BranchEvent* x)
     }
     // Else: there is another more tipwise event on the same branch; do nothing
 }
+
 
 
 

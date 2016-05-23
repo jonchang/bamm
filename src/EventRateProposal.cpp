@@ -28,19 +28,31 @@ void EventRateProposal::propose()
 
     _model.setEventRate(_proposedEventRate);
     
-    
+    //std::cout << "Checking model in ERP::propose() " << std::endl;
+    //_model.checkModel();
+    //std::cout << "done check model in EventRateProposa::Propose" << std::endl;
     
 }
 
 
 void EventRateProposal::accept()
 {
+ 
+    //std::cout << "Checking model in ERP::accept() " << std::endl;
+    //_model.checkModel();
+    //std::cout << "done check model in EventRateProposa::Accept" << std::endl;
+    
+    
 }
 
 
 void EventRateProposal::reject()
 {
     _model.setEventRate(_currentEventRate);
+    
+    //std::cout << "Checking model in ERP::reject() " << std::endl;
+    //_model.checkModel();
+    //std::cout << "done check model in EventRateProposa::reject" << std::endl;
 }
 
 
