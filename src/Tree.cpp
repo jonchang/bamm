@@ -7,6 +7,7 @@
 #include "TraitBranchEvent.h"
 #include "Log.h"
 #include "Stat.h"
+#include "Tools.h"
 
 #include "global_macros.h"
 
@@ -62,10 +63,20 @@ Tree::Tree(Random& random, Settings& settings) : _random(random)
             initializeSpeciationExtinctionModel
                 (settings.get("sampleProbsFilename"));
         }
+        
+        if (settings.get<bool>("useNodeConstraints")){
+            setNodeConstraintsFromFile
+                (settings.get("nodeConstraintsInfile"));
+        }else{
+            setCanNodeHoldEventByDescCount
+                (settings.get<int>("minCladeSizeForShift"));
+        }
+        
 
-        setCanNodeHoldEventByDescCount
-            (settings.get<int>("minCladeSizeForShift"));
         setTreeMap(getRoot());
+        
+        printNodeMap();
+        
     } else if (settings.get("modeltype") == "trait") {
         
         // TODO: is there a reason to not allow this for traitModel?
@@ -74,6 +85,76 @@ Tree::Tree(Random& random, Settings& settings) : _random(random)
         getPhenotypesMissingLatent(settings.get("traitfile"));
         initializeTraitValues();
     }
+}
+
+void Tree::setNodeConstraintsFromFile(std::string fname)
+{
+
+    std::ifstream infile(fname.c_str());
+    //log() << "\nReading phenotypes from file <" << fname.c_str() << ">\n";
+    std::vector<std::string> stringvec;
+    std::vector<std::string> species_1;
+    std::vector<std::string> species_2;
+    
+
+    
+    std::cout << "Setting node constraints from file << ";
+    std::cout << fname << " >> " << std::endl;
+    
+    if (!infile.good()) {
+        log(Error) << "Error reading file.\n";
+        std::exit(1);
+    }
+
+
+    
+    while (infile) {
+        std::string tempstring;
+        getline(infile, tempstring, '\t');
+        //std::cout << tempstring << "\n" << std::endl;
+        species_1.push_back(tempstring);
+        getline(infile, tempstring, '\n');
+        species_2.push_back(tempstring);
+        
+        // this OK?
+        if (infile.peek() == EOF) {
+            break;
+        }
+        
+        
+    }
+    
+    infile.close();
+    
+    int possible_edges = 0;
+    
+    for (int i = 0; i < (int)species_1.size(); i++){
+        std::cout << "sp1, sp2: \t" << species_1[i] << "\t" << species_2[i] << std::endl;
+        
+        Node* x = NULL;
+        
+        if ((species_1[i] != "NA") && (species_2[i] != "NA")) {
+            x = getNodeMRCA(species_1[i], species_2[i]);
+        } else if ((species_1[i] != "NA") && (species_2[i] == "NA")) {
+            x = getNodeByName(species_1[i]);
+        } else {
+            log(Error) << "Either both species are NA or the second species "
+            << "is NA\nwhile reading the event data file.";
+            std::exit(1);
+        }
+        x->setCanHoldEvent(true);
+        mappableNodes.insert(x);
+        possible_edges++;
+    }
+    getRoot()->setCanHoldEvent(true);
+    mappableNodes.insert(getRoot());
+    
+    std::cout << "Successfully set << " << possible_edges;
+    std::cout << " >> possible edges for holding rate shifts" << std::endl;
+    //exit(0);
+    
+  
+ 
 }
 
 
@@ -169,7 +250,10 @@ void Tree::setTreeMap(Node* p){
 
  */
 
-
+// New version May 23 2016 ensures that ANY
+// branches can be ommitted from the map,
+// even if they have downstream branches that SHOULD
+// be included
 void Tree::setTreeMap(Node* p)
 {
     if (p->getCanHoldEvent()){
@@ -290,11 +374,22 @@ Node* Tree::mapEventToTree(double x)
 
 void Tree::printNodeMap()
 {
+
+    for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
+         i != _preOrderNodes.end(); ++i){
+        std::cout << (*i) << "\t" << (*i)->getAnc() << "\t" << (*i)->getMapStart() << "\t"
+        << (*i)->getMapEnd() << std::endl;
+    }
+    
+    // This only prints node map for mappable nodes.
+    
+    /*
     for (std::set<Node*>::iterator i = mappableNodes.begin();
             i != mappableNodes.end(); i++) {
         std::cout << (*i) << "\t" << (*i)->getAnc() << "\t" << (*i)->getMapStart() << "\t"
              << (*i)->getMapEnd() << std::endl;
     }
+    */
 }
 
 
@@ -803,10 +898,34 @@ void Tree::setNodeSpeciationParameters(Node* x)
 {
     x->computeAndSetNodeSpeciationParams();
     x->setProposedUpdate(true);
+ 
+    
+    if (x->getLfDesc() != NULL){
+        if (x->getLfDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0){
+            
+            setNodeSpeciationParameters(x->getLfDesc());
+            
+        }else{
+            // std::cout << "Flagging " << x->getLfDesc() << std::endl;
+            x->getLfDesc()->setProposedUpdate(true);
+        }
+    }
+    
+    if (x->getRtDesc() != NULL){
+        if (x->getRtDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0){
+            
+            setNodeSpeciationParameters(x->getRtDesc());
+            
+        }else{
+            // std::cout << "Flagging " << x->getRtDesc() << std::endl;
+            x->getRtDesc()->setProposedUpdate(true);
+        }
+    }
+    
     
     //std::cout << "setNodeSpeciationParameters / " << x << std::endl;
     // std::cout << "Flagging " << x << std::endl;
-    
+/*
     if (x->getLfDesc() != NULL){
         if (x->getLfDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
             && x->getLfDesc()->getCanHoldEvent()){
@@ -832,42 +951,8 @@ void Tree::setNodeSpeciationParameters(Node* x)
             x->getRtDesc()->setProposedUpdate(true);
         }
     }
-    
-/*
-    if (x->getRtDesc() != NULL){
-        
-    }
-    
-    if (x->getBranchHistory()->getNumberOfBranchEvents() == 0){
-         if (x->getLfDesc() != NULL){
-            if (x->getLfDesc()->getCanHoldEvent()){
-                //std::cout << "Visiting lf desc ... " << std::endl;
-                setNodeSpeciationParameters(x->getLfDesc());
-            }
-        }
-        if (x->getRtDesc() != NULL){
-            if (x->getRtDesc()->getCanHoldEvent()){
-                setNodeSpeciationParameters(x->getRtDesc());
-            }
-        }    
-    
-    }
 */
-    
-/*
-    if (x->getLfDesc() != NULL){
-        if (x->getLfDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
-                && x->getLfDesc()->getCanHoldEvent()){
-             setNodeSpeciationParameters(x->getLfDesc());
-        }
-    }
-    if (x->getRtDesc() != NULL){
-        if (x->getRtDesc()->getBranchHistory()->getNumberOfBranchEvents() == 0
-                && x->getRtDesc()->getCanHoldEvent()){
-            setNodeSpeciationParameters(x->getRtDesc());
-        }
-    }
-*/
+ 
     
  }
 

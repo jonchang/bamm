@@ -186,9 +186,10 @@ BranchEvent* TraitModel::newBranchEventWithRandomParameters(double x)
 {
  
     // Sample whether event is jump from prior:
+    //bool isNewEventJump = _prior.generateIsEventJumpFromPrior();
     
-    bool isNewEventJump = _prior.generateIsEventJumpFromPrior();
-    //bool isNewEventJump = (_random.uniform() < 0.5);
+    // choose new event as jump from uniform
+    bool isNewEventJump = (_random.uniform() < 0.5);
     
     bool newIsTimeVariable = true;
     
@@ -462,7 +463,7 @@ double TraitModel::computeLogPrior()
             //logPrior += _prior.jumpPrior(event->getJump(), _jumpVariance);
 
             // Uncomment this if new events have equal prob of being jump or not
-            //logPrior += std::log(_prior.isEventJumpPrior());
+            logPrior += std::log(_prior.isEventJumpPrior());
             
         }else{
             logPrior += _prior.betaInitPrior(event->getBetaInit());
@@ -471,7 +472,7 @@ double TraitModel::computeLogPrior()
                     _prior.betaShiftPrior(event->getBetaShift());
             }
             // Uncomment this if new events have equal prob of being jump or not
-            //logPrior += std::log((1 - _prior.isEventJumpPrior() ) );
+            logPrior += std::log((1 - _prior.isEventJumpPrior() ) );
         }
     }
 

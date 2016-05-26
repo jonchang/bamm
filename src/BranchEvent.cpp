@@ -112,7 +112,17 @@ void BranchEvent::incrementMapPosition(double ink)
             setMapTime(getEventNode()->getMapEnd());
             incrementMapPosition(ink);
 
-        } else {
+        } else if (getEventNode()->getAnc()->getCanHoldEvent() == false){
+        
+            // parent branch cannot hold event...
+            // this should set new map time to end of branch,
+            // and new increment will reflect event backwards
+            // down branch
+            ink = -1 * ink;
+            setMapTime(getEventNode()->getMapEnd());
+            incrementMapPosition(ink);
+            
+        }else {
             setEventNode(getEventNode()->getAnc());
             setMapTime(getEventNode()->getMapStart());
             incrementMapPosition(ink);
@@ -171,6 +181,7 @@ void BranchEvent::incrementMapPosition(double ink)
         }
 
     } else {
+        // proposed change does not involve movement to new branch
         setMapTime(temp);
     }
 

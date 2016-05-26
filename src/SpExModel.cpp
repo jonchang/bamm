@@ -603,7 +603,7 @@ double SpExModel::computeLogLikelihood()
         logLikelihood += computePreservationLogProb();  
     }
     
-    //std::cout << "Current logLik in SpExModel::computeLogLikelihood: " << logLikelihood << std::endl;
+    // std::cout << "Current logLik in SpExModel::computeLogLikelihood: " << logLikelihood << std::endl;
     //std::cout << "Check model in SpExModel::computeLogLikelihood" << std::endl;
     //checkModel();
     //std::cout << "mchecked in SpExModel...." << std::endl;
@@ -782,9 +782,12 @@ double SpExModel::computeSpExProbBranch(Node* node)
         double spProb = 0.0;
         double exProb = 0.0;
         
+        
         // Compute speciation and extinction probabilities and store them
         // in spProb and exProb (through reference passing)
         computeSpExProb(spProb, exProb, curLam, curMu, curPsi, D0, E0, deltaT);
+        
+        //std::cout << node << "dt\t" << deltaT << "\t" << curLam << "\t" << std::log(spProb) << std::endl;
  
         
         
@@ -893,6 +896,8 @@ double SpExModel::computeSpExProbBranch(Node* node)
     
     
 #endif
+    
+    //std::cout << "in SpeXModel::COmputeLikelihoood() Node: " << node << "\t" << logLikelihood << std::endl;
     
     return logLikelihood;
 }

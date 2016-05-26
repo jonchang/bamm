@@ -53,9 +53,10 @@ void EventParameterProposal::accept()
 void EventParameterProposal::reject()
 {
     
-    // std::cout << "EventParameterProposal::reject() // Event data before reverting::" << std::endl;
+    //std::cout << "EventParameterProposal::reject() // Event data before reverting::" << std::endl;
     // _model.printEventData();
-    // _model.computeLogLikelihood();
+    
+    _model.computeLogLikelihood();
     
     
     revertToOldParameterValue();

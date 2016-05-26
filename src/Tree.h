@@ -134,6 +134,7 @@ public:
     // just call this, which sets all node status to TRUE
     void setAllNodesCanHoldEvent();
     void setCanNodeHoldEventByDescCount(int x);
+    void setNodeConstraintsFromFile(std::string infile);
 
     /* disposable stuff below? */
     void   setStartTime(double x);

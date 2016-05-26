@@ -68,12 +68,12 @@ void MCMC::step()
 
     double acceptanceRatio = _model->acceptanceRatio();
     if (_random.trueWithProbability(acceptanceRatio)) {
-        //std::cout << "MCMC::step() ACCEPT " << std::endl;
+    //std::cout << "MCMC::step() ACCEPT " << std::endl;
         _model->acceptProposal();
     } else {
         
         _model->rejectProposal();
-        //std::cout << "MCMC::step() REJECT " << _model->getCurrentLogLikelihood() << std::endl;
+    //    std::cout << "MCMC::step() REJECT " << _model->getCurrentLogLikelihood() << std::endl;
     }
 
     //std::cout << "post-step" << std::endl;

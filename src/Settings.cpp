@@ -184,6 +184,10 @@ void Settings::initializeGlobalSettings()
     
     /*********************************************************/
     
+    // Parameters to allow constraints on nodes for shifts
+    addParameter("useNodeConstraints", "0", NotRequired);
+    addParameter("nodeConstraintsInfile", "", NotRequired);
+    
     
 }
 
@@ -239,6 +243,8 @@ void Settings::initializeSpeciationExtinctionSettings()
     addParameter("alwaysRecomputeE0", "0", NotRequired);
     
     addParameter("combineExtinctionAtNodes", "if_different", NotRequired);
+    
+    
     
     
     /********************************************************/
