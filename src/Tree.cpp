@@ -75,7 +75,7 @@ Tree::Tree(Random& random, Settings& settings) : _random(random)
 
         setTreeMap(getRoot());
         
-        printNodeMap();
+        //printNodeMap();
         
     } else if (settings.get("modeltype") == "trait") {
         
