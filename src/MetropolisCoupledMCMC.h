@@ -70,6 +70,7 @@ private:
     ModelDataWriter* _dataWriter;
 
     int _acceptanceResetFreq;
+
 };
 
 

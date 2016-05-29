@@ -26,6 +26,7 @@ MetropolisCoupledMCMC::MetropolisCoupledMCMC
     // MC3 settings
     _nChains = _settings.get<int>("numberOfChains");
     _deltaT = _settings.get<double>("deltaT");
+
     _swapPeriod = _settings.get<int>("swapPeriod");
 
     _coldChainIndex = 0;

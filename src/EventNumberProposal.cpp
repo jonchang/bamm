@@ -93,7 +93,12 @@ double EventNumberProposal::acceptanceRatio()
     double logLikelihoodRatio = computeLogLikelihoodRatio();
     double logPriorRatio = computeLogPriorRatio();
     double logQRatio = computeLogQRatio();
+    
+    double deltaPrior = _proposedLogPrior - _currentLogPrior;
 
+    int wasAdd = _lastProposal == AddEvent;
+    //std::cout << "last: " << wasAdd << "\tDP: " << deltaPrior << "\tQR: " << _model.logQRatioJump() << std::endl;
+ 
     double t = _model.getTemperatureMH();
     double logRatio = t * (logLikelihoodRatio + logPriorRatio) + logQRatio;
 
@@ -125,12 +130,17 @@ double EventNumberProposal::computeLogPriorRatio()
 
 double EventNumberProposal::computeLogQRatio()
 {
-    if (_lastProposal == AddEvent) {
+     if (_lastProposal == AddEvent) {
         // -0.6931... is ln 0.5
+        //std::cout << "EventNumberProposal::computeLogQRatio() / AddEvent QR: " << _model.logQRatioJump() << std::endl;
+
         double logQRatio = (_currentEventCount > 0) ? 0.0 : -0.69314718055995;
         return logQRatio - _model.logQRatioJump();
-    } else {
-        // 0.6931... is ln 2.0
+     } else {
+         
+         //std::cout << "EventNumberProposal::computeLogQRatio() / deleteEvent" << std::endl;
+
+         // 0.6931... is ln 2.0
         double logQRatio = (_currentEventCount != 1) ? 0.0 : 0.69314718055995;
         return logQRatio + _model.logQRatioJump();
     }

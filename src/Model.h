@@ -108,6 +108,8 @@ public:
     void forwardSetHistoriesSafeRecursive(Node* p);
     void completeDebugPrint(std::string xx);
     
+    double getLikelihoodPower();
+    
 protected:
     
 
@@ -190,9 +192,15 @@ protected:
     bool _isNewProposal;
     int _debugCounter;
     
+    // FOR power posteriors
+    double _likelihoodPower;
+    
 };
 
-
+inline double Model::getLikelihoodPower()
+{
+    return _likelihoodPower;
+}
 
 inline Tree* Model::getTreePtr()
 {

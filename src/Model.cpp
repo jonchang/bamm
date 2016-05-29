@@ -48,6 +48,8 @@ Model::Model(Random& random, Settings& settings) :
 
     _isNewProposal = true;
     
+    _likelihoodPower = _settings.get<double>("likelihoodPower");
+    
     // Add proposals
     _proposals.push_back(new EventNumberProposal(random, settings, *this));
     _proposals.push_back
@@ -691,6 +693,7 @@ void Model::setTemperatureMH(double x)
 {
     if ((x >= 0) && (x <= 1.0)) {
         _temperatureMH = x;
+        
     } else {
         log(Error) << "Attempt to set invalid temperature in "
             << "Model::setModelTemperature: " << x << "\n";

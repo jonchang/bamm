@@ -19,6 +19,7 @@ public:
 protected:
 
     double _weight;
+    
 };
 
 

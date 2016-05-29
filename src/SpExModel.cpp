@@ -42,6 +42,13 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
     _muInit0 = _settings.get<double>("muInit0");
     _muShift0 = _settings.get<double>("muShift0");
 
+    if (_muInit0 < 0.0000001 & _settings.get<double>("updateRateMu0") > 0.0000001){
+        std::cout << "Invalid starting value for parameter << muInit0 >>" << std::endl;
+        std::cout << "Initial value must be greater than zero if updateRateMu0 > 0" << std::endl;
+        exit(0);
+    }
+    
+    
     _alwaysRecomputeE0 = _settings.get<bool>("alwaysRecomputeE0");
     
     
@@ -395,11 +402,11 @@ BranchEvent* SpExModel::newBranchEventWithRandomParameters(double x)
     // Computes the jump density for the addition of new parameters.
     _logQRatioJump = 0.0; // Set to zero to clear previous values
     _logQRatioJump = _prior.lambdaInitPrior(newLam);
-    if (newIsTimeVariable) {
+    if (std::fabs(newLambdaShift) > 1E-6) {
         _logQRatioJump += _prior.lambdaShiftPrior(newLambdaShift);
     }
     _logQRatioJump += _prior.muInitPrior(newMu);
-    _logQRatioJump += _prior.muShiftPrior(newMuShift);
+    //_logQRatioJump += _prior.muShiftPrior(newMuShift);
 
     return new SpExBranchEvent(newLam, newLambdaShift, newMu,
         newMuShift, newIsTimeVariable, _tree->mapEventToTree(x),
@@ -421,20 +428,23 @@ void SpExModel::setDeletedEventParameters(BranchEvent* be)
 
 double SpExModel::calculateLogQRatioJump()
 {
-    double _logQRatioJump = 0.0;
+    _logQRatioJump = 0.0;
 
     _logQRatioJump = _prior.lambdaInitPrior(_lastDeletedEventLambdaInit);
  
     // DLR: add check to ensure that model jumping proposal ratio
     //      only multiplies by prior prob of lambdaShift if the
-    //      proposed event is time-constant 
+    //      proposed event is time-constant
+    
     if (std::fabs(_lastDeletedEventLambdaShift) > 1E-6){
         _logQRatioJump += _prior.lambdaShiftPrior(_lastDeletedEventLambdaShift);
     }
  
     _logQRatioJump += _prior.muInitPrior(_lastDeletedEventMuInit);
-    _logQRatioJump += _prior.muShiftPrior(_lastDeletedEventMuShift);
-
+    
+    //_logQRatioJump += _prior.muShiftPrior(_lastDeletedEventMuShift);
+    //std::cout << "logQ in SpExModel::calculate: " << _logQRatioJump << std::endl;
+    
     return _logQRatioJump;
 }
 
@@ -454,7 +464,11 @@ BranchEvent* SpExModel::newBranchEventFromLastDeletedEvent()
  
 double SpExModel::computeLogLikelihood()
 {
-     if (_sampleFromPriorOnly)
+    if (_likelihoodPower < 0.000000001){
+        return 0.0;
+    }
+    
+    if (_sampleFromPriorOnly)
         return 0.0;
     
     double logLikelihood = 0.0;
@@ -608,8 +622,9 @@ double SpExModel::computeLogLikelihood()
     //checkModel();
     //std::cout << "mchecked in SpExModel...." << std::endl;
     //std::cout << "computed from stored: " << computeFromStored << std::endl;
+ 
+    return (_likelihoodPower * logLikelihood);
     
-    return logLikelihood;
 }
 
 
@@ -1066,6 +1081,13 @@ double SpExModel::computeLogPrior()
 {
     double logPrior = 0.0;
 
+// TODO: delete code block here
+// Bug: was double-counting root event, by failing
+// to account for fact that root event was already in eventCollection
+// TODO: removing this deprecates a specific "root" prior
+// Since they are no longer computed under root-specific parameters
+/*
+    
     SpExBranchEvent* rootEvent = static_cast<SpExBranchEvent*>(_rootEvent);
 
     logPrior += _prior.lambdaInitRootPrior(rootEvent->getLamInit());
@@ -1076,34 +1098,40 @@ double SpExModel::computeLogPrior()
         //logPrior += std::log(1.0 - _prior.lambdaIsTimeVariablePrior());
     }
     logPrior += _prior.muInitRootPrior(rootEvent->getMuInit());
-    logPrior += _prior.muShiftRootPrior(rootEvent->getMuShift());
+    //logPrior += _prior.muShiftRootPrior(rootEvent->getMuShift());
 
+*/
+ 
+ 
     EventSet::iterator it;
     for (it = _eventCollection.begin(); it != _eventCollection.end(); ++it) {
+ 
         SpExBranchEvent* event = static_cast<SpExBranchEvent*>(*it);
 
         logPrior += _prior.lambdaInitPrior(event->getLamInit());
-        if (event->isTimeVariable()) {
-            logPrior += _prior.lambdaShiftPrior(event->getLamShift());
+        
+        //if (event->isTimeVariable()) {
+        
+        if (std::fabs(_lastDeletedEventLambdaShift) > 1E-6){
+             logPrior += _prior.lambdaShiftPrior(event->getLamShift());
         //    logPrior += std::log(_prior.lambdaIsTimeVariablePrior());
         }else{
         //    logPrior += std::log(1.0 - _prior.lambdaIsTimeVariablePrior());
         }
         
         logPrior += _prior.muInitPrior(event->getMuInit());
-        logPrior += _prior.muShiftPrior(event->getMuShift());
+        //logPrior += _prior.muShiftPrior(event->getMuShift());
     }
 
     // Here's prior density on the event rate
     logPrior += _prior.poissonRatePrior(_eventRate);
-    
+ 
     // Prior density on the preservation rate, if paleo data:
     if (_hasPaleoData){
         logPrior += _prior.preservationRatePrior(_preservationRate);
     }
-
-    
-    //std::cout << "logPrior: " << logPrior << std::endl;
+ 
+    //std::cout << "N_events: " << _eventCollection.size() << "\tlogPrior: " << logPrior << std::endl;
     
     
     return logPrior;

@@ -94,7 +94,7 @@ double Prior::generateLambdaShiftFromPrior()
 
 double Prior::lambdaInitPrior(double x)
 {
-    return Stat::lnExponentialPDF(x, _lambdaInitPrior);
+     return Stat::lnExponentialPDF(x, _lambdaInitPrior);
 }
 
 

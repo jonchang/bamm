@@ -587,7 +587,7 @@ void Tree::setIsLivingTipStatus()
     for (std::vector<Node*>::iterator i = _preOrderNodes.begin();
             i != _preOrderNodes.end(); ++i) {
         if ((*i)->getLfDesc() == NULL && (*i)->getRtDesc() == NULL) {
-            double test = abs((*i)->getTime() - tx );
+            double test = std::abs((*i)->getTime() - tx );
             if (test < TOL) {
                 (*i)->setIsLivingTip(true);
             } else {

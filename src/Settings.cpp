@@ -189,6 +189,10 @@ void Settings::initializeGlobalSettings()
     addParameter("nodeConstraintsInfile", "", NotRequired);
     
     
+    /************************************/
+    addParameter("likelihoodPower", "1.0", NotRequired);
+    
+    
 }
 
 

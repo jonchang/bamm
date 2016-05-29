@@ -186,12 +186,14 @@ BranchEvent* TraitModel::newBranchEventWithRandomParameters(double x)
 {
  
     // Sample whether event is jump from prior:
-    //bool isNewEventJump = _prior.generateIsEventJumpFromPrior();
+    bool isNewEventJump = _prior.generateIsEventJumpFromPrior();
     
     // choose new event as jump from uniform
-    bool isNewEventJump = (_random.uniform() < 0.5);
+    //bool isNewEventJump = (_random.uniform() < 0.5);
     
-    bool newIsTimeVariable = true;
+    bool newIsTimeVariable = _prior.generateBetaIsTimeVariableFromPrior();
+    
+    
     
     double newbeta = 0.0;
     double newBetaShift = 0.0;
@@ -224,6 +226,14 @@ BranchEvent* TraitModel::newBranchEventWithRandomParameters(double x)
 #else
         double dens_term = 0.0;
 #endif    
+        
+        /*
+        if (isNewEventJump){
+            _logQRatioJump += std::log(_prior.isEventJumpPrior());
+        }else{
+            _logQRatioJump +=   std::log(1 - _prior.isEventJumpPrior());
+        }
+        */
         
         _logQRatioJump += _prior.betaInitPrior(newbeta);
         
@@ -293,7 +303,7 @@ void TraitModel::setDeletedEventParameters(BranchEvent* be)
 
 double TraitModel::calculateLogQRatioJump()
 {
-    double _logQRatioJump = 0.0;
+    _logQRatioJump = 0.0;
 
     _logQRatioJump = _prior.betaInitPrior(_lastDeletedEventBetaInit);
     _logQRatioJump += _prior.betaShiftPrior(_lastDeletedEventBetaShift);
@@ -303,10 +313,15 @@ double TraitModel::calculateLogQRatioJump()
         //_logQRatioJump = _prior.jumpPrior(_lastDeletedEventJump, _jumpVariance);
         
         _logQRatioJump = _prior.jumpPrior(_lastDeletedEventJump);
+        //_logQRatioJump += std::log(_prior.isEventJumpPrior());
+ 
     }else{
         _logQRatioJump = _prior.betaInitPrior(_lastDeletedEventBetaInit);
-        _logQRatioJump += _prior.betaShiftPrior(_lastDeletedEventBetaShift);
-   
+        
+        if(_lastDeletedEventTimeVariable){
+            _logQRatioJump += _prior.betaShiftPrior(_lastDeletedEventBetaShift);
+        }
+        //_logQRatioJump +=   std::log(1 - _prior.isEventJumpPrior());
     }
     return _logQRatioJump;
 }
@@ -325,6 +340,9 @@ BranchEvent* TraitModel::newBranchEventFromLastDeletedEvent()
 double TraitModel::computeLogLikelihood()
 {
 
+    if (_likelihoodPower < 0.000000001)
+        return 0.0;
+    
     double LnL = 0.0;
 
     //Node * tmpnode = _tree->getRoot()->getLfDesc();
@@ -361,12 +379,16 @@ double TraitModel::computeLogLikelihood()
     }
 
 #endif
-    return LnL;
+        
+    return LnL * _likelihoodPower ;
 
 }
 
 double TraitModel::computeTriadLikelihoodTraits(Node* x)
 {
+    if (_likelihoodPower < 0.000000001)
+        return 0.0;
+
     // std::cout << "TraitModel::computeTriadLikelihoodTraits ROOT: \t" << _tree->getRoot()->getTraitValue() <<std::endl;
     if (_sampleFromPriorOnly)
         return 0.0;
@@ -428,7 +450,7 @@ double TraitModel::computeTriadLikelihoodTraits(Node* x)
 #endif
     // std::cout << "TraitModel::computeTriadLikelihood: " << logL << std::endl;
 
-    return logL;
+    return logL * _likelihoodPower;
 
 }
 
@@ -443,12 +465,16 @@ double TraitModel::computeLogPrior()
 
     double logPrior = 0.0;
 
+    // TODO: Remove the lines below, was double-counting root event
+    /*
     TraitBranchEvent* re = static_cast<TraitBranchEvent*>(_rootEvent);
 
     logPrior += _prior.betaInitRootPrior(re->getBetaInit());
     if (re->isTimeVariable()) {
         logPrior += dens_term + _prior.betaShiftRootPrior(re->getBetaShift());
     }
+    */
+     
 
     for (std::set<BranchEvent*>::iterator i = _eventCollection.begin();
          i != _eventCollection.end(); ++i) {
@@ -463,7 +489,7 @@ double TraitModel::computeLogPrior()
             //logPrior += _prior.jumpPrior(event->getJump(), _jumpVariance);
 
             // Uncomment this if new events have equal prob of being jump or not
-            logPrior += std::log(_prior.isEventJumpPrior());
+            //logPrior += std::log(_prior.isEventJumpPrior());
             
         }else{
             logPrior += _prior.betaInitPrior(event->getBetaInit());
@@ -472,7 +498,7 @@ double TraitModel::computeLogPrior()
                     _prior.betaShiftPrior(event->getBetaShift());
             }
             // Uncomment this if new events have equal prob of being jump or not
-            logPrior += std::log((1 - _prior.isEventJumpPrior() ) );
+            //logPrior += std::log((1 - _prior.isEventJumpPrior() ) );
         }
     }
 
@@ -482,6 +508,8 @@ double TraitModel::computeLogPrior()
 
     // For unimplemented hierarchical model:
     //logPrior += _prior.jumpVariancePrior(_jumpVariance);
+    //std::cout << "logPrior: " << logPrior << std::endl;
+    
     return logPrior;
 
 }
