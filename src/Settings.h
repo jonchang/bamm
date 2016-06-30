@@ -21,6 +21,7 @@ class Settings
 {
 public:
 
+    Settings(const std::vector<UserParameter>& commandLineParameters);
     Settings(const std::string& controlFilename,
         const std::vector<UserParameter>& commandLineParameters);
 
@@ -30,6 +31,9 @@ public:
     void set(const std::string& name, const std::string& value);
   
     void printCurrentSettings(std::ostream& out = std::cout) const;
+
+    // Parameters that settings knows about
+    ParameterMap _parameters;
 
 private:
 
@@ -69,8 +73,6 @@ private:
 
     static const size_t NumberOfParamsToPrefix = 10;
  
-    // Parameters that settings knows about
-    ParameterMap _parameters;
     
     // Parameters read from the control file
     std::vector<UserParameter> _userParameters;

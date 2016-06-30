@@ -11,6 +11,39 @@
 #include "Log.h"
 #include "MatchPathSeparator.h"
 
+// "command line" parameters only
+Settings::Settings(const std::vector<UserParameter>& commandLineParameters) :
+    _commandLineParameters(commandLineParameters)
+{
+    // Get the model type
+    std::string modelType;
+    for (auto it = commandLineParameters.begin(); it < commandLineParameters.end(); ++it) {
+        if (it->first == "modeltype") {
+            modelType = it->second;
+            break;
+        }
+    }
+ 
+    initializeGlobalSettings();
+ 
+    // Initialize specific settings for model type
+    if (modelType == "speciationextinction") {
+        initializeSpeciationExtinctionSettings();
+    } else if (modelType == "trait") {
+        initializeTraitSettings();
+    } else {
+        exitWithErrorInvalidModelType();
+    }
+
+    // Re-assign parameters based on user values
+    initializeSettingsWithUserValues();
+
+    checkAllSettingsAreUserDefined();
+    checkAllOutputFilesAreWriteable();
+    
+    validateSettings();
+    
+}
 
 Settings::Settings(const std::string& controlFilename,
     const std::vector<UserParameter>& commandLineParameters) :
