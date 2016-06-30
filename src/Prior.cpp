@@ -212,8 +212,7 @@ double Prior::lambdaInitRootPrior(double x)
         return lambdaInitPrior(x);
     } else {
         return Stat::lnExponentialPDF(x, _lambdaInitRootPrior);
-        std::cout << "Invalid call to lambdaInitRootPrior"  << std::endl;
-        exit(0);
+        exitWithError("Invalid call to lambdaInitRootPrior");
     }
 
 }
@@ -229,10 +228,8 @@ double Prior::lambdaShiftRootPrior(double x)
         // but why is this implemented as an exponential???
         // TODO: throwing exception here as should never
         //  get here, but need more tests to remove.
-        std::cout << "Invalid call to lambdaInitRootPrior"  << std::endl;
-        exit(0);
-        
-        
+        exitWithError("Invalid call to lambdaInitRootPrior");
+
         return Stat::lnExponentialPDF(x, _lambdaShiftRootPrior);
     }
 }
@@ -246,8 +243,7 @@ double Prior::muInitRootPrior(double x)
 
         // TODO: throwing exception here as should never
         //  get here, but need more tests to remove.
-        std::cout << "Invalid call to muInitRootPrior"  << std::endl;
-        exit(0);
+        exitWithError("Invalid call to muInitRootPrior");
         return Stat::lnExponentialPDF(x, _muInitRootPrior);
     }
 }
@@ -261,8 +257,7 @@ double Prior::muShiftRootPrior(double x)
         //TODO: what is going on here?
         // muShiftRootPrior has been deprecated,
         // but why is this implemented as an exponential???
-        std::cout << "Invalid call to muShiftRootPrior"  << std::endl;
-        exit(0);
+        exitWithError("Invalid call to muShiftRootPrior");
         return Stat::lnExponentialPDF(x, _muShiftRootPrior);
     }
 }

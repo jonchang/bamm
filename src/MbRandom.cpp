@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "MbRandom.h"
+#include "Log.h"
 
 /*!
  * Constructor for MbRandom class. This constructor does not take
@@ -618,8 +619,7 @@ double MbRandom::dirichletPdf(const std::vector<double> &a, const std::vector<do
 
     double tol = 0.0001;
     if ( tol < fabs( zSum - 1.0 ) ) {
-        std::cout << "Fatal error in dirichletPdf" << std::endl;
-        std::exit(1);
+        exitWithError("Fatal error in dirichletPdf");
         //ui->error("Fatal error in dirichletPdf");
         //throw(MbException(MbException::ERROR));
     }
@@ -1018,8 +1018,7 @@ double MbRandom::incompleteBeta(double a, double b, double x) {
     for (;;) {
         it++;
         if ( it_max < it ) {
-            std::cout << "Error in incompleteBeta: Maximum number of iterations exceeded!" << std::endl;
-      std::exit(1);
+            exitWithError("Error in incompleteBeta: Maximum number of iterations exceeded!");
             //ui->error("Error in incompleteBeta: Maximum number of iterations exceeded!");
             //throw(MbException(MbException::ERROR));
         }

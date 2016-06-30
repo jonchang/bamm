@@ -345,9 +345,7 @@ void Settings::initializeSettingsWithUserValues()
         if (paramIt != _parameters.end()) {
             (paramIt->second).setStringValue(cmdLineParamIt->second);
         } else {
-            log(Error) << "Command-line parameter " << cmdLineParamIt->first
-                << " is not a known parameter.\n";
-            std::exit(1);
+            exitWithError("Command-line parameter " + cmdLineParamIt->first + " is not a known parameter.");
         }
     }
 
@@ -502,75 +500,65 @@ void Settings::printCurrentSettings(std::ostream& out) const
 
 void Settings::exitWithErrorNoControlFile() const
 {
-    log(Error) << "Specified control file does not exist.\n"
-               << "Check that the file is in the specified location.\n";
-    std::exit(1);
+    exitWithError("Specified control file does not exist.\nCheck that the file is in the specified location.");
 }
 
 
 void Settings::exitWithErrorInvalidLine(const std::string& line) const
 {
-    log(Error) << "Invalid input line in control file.\n"
-               << "Problematic line includes <<" << line << ">>\n";
-    std::exit(1);
+    std::string s = "Invalid input line in control file.\nProblematic line includes <<";
+    exitWithError(s += line + ">>");
 }
 
 
 void Settings::exitWithErrorUndefinedParameter(const std::string& name) const
 {
-    log(Error) << "Parameter " << name << " is undefined.\n"
-               << "Fix by giving the parameter a value in the control file.\n";
-    std::exit(1);
+    exitWithError("Parameter " + name + " is undefined.\n" +
+                  "Fix by giving the parameter a value in the control file.");
 }
 
 
 void Settings::exitWithErrorInvalidModelType() const
 {
-    log(Error) << "Invalid type of analysis.\n"
-               << "Fix by setting modeltype as speciationextinction or trait\n";
-    std::exit(1);
+    exitWithError("Invalid type of analysis.\nFix by setting modeltype as speciationextinction or trait");
 }
 
 
 void Settings::exitWithErrorParametersNotFound
     (const std::vector<std::string>& paramsNotFound) const
 {
-    log(Error) << "One or more parameters from the control file does not\n"
+    std::ostringstream err;
+    err << "One or more parameters from the control file does not\n"
         << "correspond to valid model parameters. Make sure that you are\n"
         << "running the correct version of BAMM or check that the following\n"
         << "parameters are spelled correctly:\n\n";
 
     std::vector<std::string>::const_iterator it;
     for (it = paramsNotFound.begin(); it != paramsNotFound.end(); ++it) {
-        log() << std::setw(30) << *it << std::endl;
+        err << std::setw(30) << *it << std::endl;
     }
 
-    std::exit(1);
+    exitWithError(err.str());
 }
 
 void Settings::exitWithErrorParameterIsDeprecated
     (const std::string& param) const
 {
-    log(Error) << "Parameter " << param << " has been deprecated. Fix by\n"
-        << "removing this parameter or use the appropriate version of BAMM.\n";
-    std::exit(1);
+    exitWithError("Parameter " + param + " has been deprecated. Fix by\n" +
+                  "removing this parameter or use the appropriate version of BAMM.");
 }
 
 
 void Settings::exitWithErrorDuplicateParameter(const std::string& param) const
 {
-    log(Error) << "Duplicate parameter " << param << ".\n"
-               << "Fix by removing duplicate parameter in control file.\n";
-    std::exit(1);
+    exitWithError("Duplicate parameter " + param + ".\n" +
+                  "Fix by removing duplicate parameter in control file.");
 }
 
 
 void Settings::exitWithErrorOutputFileExists() const
 {
-    log(Error) << "Analysis is set to not overwrite files.\n"
-               << "Fix by removing or renaming output file(s),\n"
-               << "or set \"overwrite = 1\" in the control file.\n";
-    std::exit(1);
+    exitWithError("Analysis is set to not overwrite files.\nFix by removing or renaming output file(s),\nor set \"overwrite = 1\" in the control file.");
 }
 
 
@@ -595,10 +583,7 @@ void Settings::validateSettings(void)
     double expected = this->get<double>("expectedNumberOfShifts");
     
     if (poisson < minval & expected < minval){
-        std::cout << "You must specify either:\n";
-        std::cout << "\tpoissonRatePrior = <value>, or\n";
-        std::cout << "\texpectedNumberOfShifts = <value>\n";
-        exit(0);
+        exitWithError("You must specify either:\n\tpoissonRatePrior = <value>, or\n\texpectedNumberOfShifts = <value>");
     }
     
     if (poisson < minval & expected >= minval){

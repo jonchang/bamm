@@ -652,8 +652,7 @@ void Tree::readTree(const std::string& treeFileName)
     log() << "\nReading tree from file <" << treeFileName << ">.\n";
 
     if (!treeFileStream.good()) {
-        log(Error) << "Invalid file name for phylogenetic tree\n";
-        std::exit(1);
+        exitWithError("Invalid file name for phylogenetic tree\n");
     }
 
     _treeReader.read(treeFileStream, *this);
@@ -959,8 +958,7 @@ void Tree::getPhenotypes(std::string fname)
     std::vector<double> traits;
 
     if (!infile.good()) {
-        log(Error) << "Error reading file.\n";
-        std::exit(1);
+        exitWithError("Error reading file.");
     }
 
     while (infile) {
@@ -1007,9 +1005,7 @@ void Tree::getPhenotypesMissingLatent(std::string fileName)
     std::ifstream inputFile(fileName.c_str());
 
     if (!inputFile) {
-        log(Error) << "Could not read trait values from file "
-            << "<<" << fileName << ">>.\n";
-        std::exit(1);
+        exitWithError("Could not read trait values from file " + fileName + ">>.");
     }
 
     log() << "Reading traits from file <<" << fileName << ">>.\n";
@@ -1172,8 +1168,7 @@ void Tree::initializeSpeciationExtinctionModel(std::string fname)
     
     
     if (!infile.good()) {
-        log(Error) << "Bad sampling fraction file.\n";
-        std::exit(1);
+        exitWithError("Bad sampling fraction file.");
     }
 
     log() << "Reading sampling fractions from file <<" << fname << ">>...\n";
@@ -1192,9 +1187,7 @@ void Tree::initializeSpeciationExtinctionModel(std::string fname)
 
     // std::atof returns 0.0 if the conversion fails
     if (backboneSampProb == 0.0) {
-        log(Error) << "The first line of the sampling probability file\n"
-                   << "must be the global sampling probability (> 0.0).\n";
-        std::exit(1);
+        exitWithError("The first line of the sampling probability file\nmust be the global sampling probability (> 0.0).");
     }
 
     while (infile) {
@@ -1217,18 +1210,17 @@ void Tree::initializeSpeciationExtinctionModel(std::string fname)
         inStream >> sfrac;
 
         if (eof) {
-            log(Error) << "Sampling probability file is not formatted "
-                       << "properly.\nPlease see the documentation.\n";
-            std::exit(1);
+            exitWithError("Sampling probability file is not formatted properly.\nPlease see the documentation.");
         }
 
         if (sfrac <= 0.0 || sfrac > 1.0) {
-            log(Error) << "In line with species <<" << spname << ">> and "
-                       << "family name\n<<" << spfamily << ">>, "
-                       << "sampling fraction must be greater than 0 and less\n"
-                       << "than or equal to 1. This error may also occur if\n"
-                       << "the input line is not formatted properly.\n";
-            std::exit(1);
+            std::stringstream s;
+            s << "In line with species <<" << spname << ">> and " <<
+                 "family name\n<<" << spfamily << ">>, " <<
+                 "sampling fraction must be greater than 0 and less\n" <<
+                 "than or equal to 1. This error may also occur if\n" <<
+                 "the input line is not formatted properly.";
+            exitWithError(s.str());
         }
 
         spnames.push_back(spname);
@@ -1286,8 +1278,7 @@ void Tree::initializeSpeciationExtinctionModel(std::string fname)
         }
 
         if ((*i)->getCladeName() == "") {
-            log(Error) << "There are unset clade names.\n";
-            std::exit(1);
+            exitWithError("There are unset clade names.");
         }
     }
 
@@ -1321,8 +1312,7 @@ void Tree::assertIsSubset(const std::vector<std::string>& list1,
     std::vector<std::string>::const_iterator it;
     for (it = list1.begin(); it != list1.end(); ++it) {
         if (std::find(list2.begin(), list2.end(), *it) == list2.end()) {
-            log(Error) << "<<" << *it << ">> is not in " << list2Name << ".\n";
-            std::exit(1);
+            exitWithError("<<" + *it + ">> is not in " + list2Name + ".");
         }
     }
 }
@@ -1762,11 +1752,9 @@ Node* Tree::getNodeByName(const std::string& A)
         }
     }
     if (count == 0) {
-        std::cout << "Invalid node name: name not found in Tree:: getNodeByName" << std::endl;
-        exit(0);
+        exitWithError("Invalid node name: name not found in Tree:: getNodeByName");
     } else if (count > 1) {
-        std::cout << "Duplicate node names found in Tree:: getNodeByName" << std::endl;
-        exit(0);
+        exitWithError("Duplicate node names found in Tree:: getNodeByName");
     } //else {
 
     //}
@@ -1844,10 +1832,9 @@ void Tree::assertTreeIsBifurcatingRecurse(Node* node)
 
     if ((left == NULL && right != NULL) ||
         (left != NULL && right == NULL)) {
-        log(Error) << "Tree is not bifurcating.\n"
-            << "The node with branch length " << node->getBrlen() << " "
-            << "has only one child node.\n";
-        std::exit(1);
+        std::stringstream s;
+        s << "Tree is not bifurcating.\nThe node with branch length " << node->getBrlen() << "has only one child node.";
+        exitWithError(s.str());
     }
 
     if (left != NULL && right != NULL) {
@@ -1862,8 +1849,7 @@ void Tree::assertBranchLengthsArePositive()
     Node* root = getRoot();
 
     if (root->getBrlen() < 0.0) {
-        log(Error) << "Branch length of root node is negative.\n";
-        std::exit(1);
+        exitWithError("Branch length of root node is negative.");
     }
 
     assertBranchLengthsArePositiveRecurse(root->getLfDesc());
@@ -1878,8 +1864,7 @@ void Tree::assertBranchLengthsArePositiveRecurse(Node* node)
     }
 
     if (node->getBrlen() <= 0.0) {
-        log(Error) << "At least one branch length is non-positive.\n";
-        std::exit(1);
+        exitWithError("At least one branch length is non-positive.");
     }
 
     assertBranchLengthsArePositiveRecurse(node->getLfDesc());
@@ -1890,8 +1875,7 @@ void Tree::assertBranchLengthsArePositiveRecurse(Node* node)
 void Tree::assertTreeIsUltrametric()
 {
     if (!isUltrametric()) {
-        log(Error) << "Tree is not ultrametric.\n";
-        std::exit(1);
+        exitWithError("Tree is not ultrametric.");
     }
 }
 
@@ -1908,8 +1892,7 @@ void Tree::assertTipsHaveUniqueNames()
     it = std::adjacent_find(names.begin(), names.end());
 
     if (it != names.end()) {
-        log(Error) << "Tree contains tips with the same name.\n";
-        std::exit(1);
+        exitWithError("Tree contains tips with the same name.");
     }
 }
 

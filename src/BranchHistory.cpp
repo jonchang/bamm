@@ -138,9 +138,7 @@ BranchEvent* BranchHistory::getEventByIndexPosition(int index)
             it++;
         return *it;
     } else {
-        log(Error) << "BranchHistory::getEventByIndexPosition: "
-                   << "accessing invalid event\n";
-        std::exit(1);
+        exitWithError("BranchHistory::getEventByIndexPosition: accessing invalid event");
     }
 
 }

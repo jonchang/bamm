@@ -76,8 +76,7 @@ std::vector<int> ChainSwapDataWriter::rankChainsByTemp
         if (tempRank > 0) {
             ranks.push_back(tempRank);
         } else {
-            log(Error) << "Error while ranking chain temperatures.\n";
-            std::exit(1);
+            exitWithError("Error while ranking chain temperatures.");
         }
     }
 

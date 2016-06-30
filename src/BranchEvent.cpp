@@ -86,8 +86,7 @@ void BranchEvent::incrementMapPosition(double ink)
 
         if (getEventNode() == treePtr->getRoot()) {
             // Should never get here
-            log(Error) << "Root problem in incrementMapPosition\n";
-            std::exit(1);
+            exitWithError("Root problem in incrementMapPosition");
         }
 
         if (getEventNode()->getAnc() == treePtr->getRoot()) {
@@ -164,8 +163,7 @@ void BranchEvent::incrementMapPosition(double ink)
             incrementMapPosition(ink);
 
         } else {
-            log(Error) << "Problem in incrementMapPosition()\n";
-            std::exit(1);
+            exitWithError("Problem in incrementMapPosition()");
         }
 
     } else {

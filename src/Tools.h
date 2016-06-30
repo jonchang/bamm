@@ -20,9 +20,9 @@ template<typename T> T convert_string(const std::string& str)
     iss >> value;
 
     if (iss.fail()) {
-        log(Error) << "Could not convert <<" << str
-            << ">> to the proper type.\n";
-        std::exit(1);
+        std::string s = "Could not convert <<";
+        s += str + ">> to the proper type.";
+        exitWithError(s);
     }
 
     return value;

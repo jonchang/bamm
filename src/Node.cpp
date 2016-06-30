@@ -465,8 +465,7 @@ double Node::getPointExtinction(double branchtime)
         }
         reltime = abstime - lastEvent->getAbsoluteTime();
         if (reltime < 0) {
-            log(Error) << "Invalid time in Node::getPointExtinction().\n";
-            std::exit(1);
+            exitWithError("Invalid time in Node::getPointExtinction().");
         }
 
         double shift = lastEvent->getMuShift();
@@ -521,9 +520,7 @@ double Node::computeSpeciationRateIntervalRelativeTime(double tstart,
         rate /= (t2 - t1);
 
         if ((t1 < 0 ) | (t2 < t1)) {
-            log(Error) << "Times are bad in "
-                "Node::computeSpeciationRateIntervalRelTime.\n";
-            std::exit(1);
+            exitWithError("Times are bad in Node::computeSpeciationRateIntervalRelTime.");
         }
 
     } else {
@@ -614,9 +611,7 @@ double Node::computeSpeciationRateIntervalRelativeTime(double t_init, double tst
     rate /= (t2 - t1);
         
     if ((t1 < 0 ) | (t2 < t1)) {
-        log(Error) << "Times are bad in "
-        "Node::computeSpeciationRateIntervalRelTime.\n";
-        std::exit(1);
+        exitWithError("Times are bad in Node::computeSpeciationRateIntervalRelTime.");
     }
     
     return rate;
@@ -659,9 +654,7 @@ double Node::computeExtinctionRateIntervalRelativeTime(double t_init, double tst
     rate /= (t2 - t1);
         
     if ((t1 < 0 ) | (t2 < t1)) {
-        log(Error) << "Times are bad in "
-        "Node::computeExtinctionRateInterval.\n";
-    std::exit(1);
+        exitWithError("Times are bad in Node::computeExtinctionRateInterval.");
     }
     
     return rate;
@@ -712,9 +705,7 @@ double Node::computeExtinctionRateIntervalRelativeTime(double tstart,
         rate /= (t2 - t1);
 
         if ((t1 < 0 ) | (t2 < t1)) {
-            log(Error) << "Times are bad in "
-                "Node::computeExtinctionRateInterval.\n";
-            std::exit(1);
+            exitWithError("Times are bad in Node::computeExtinctionRateInterval.");
         }
     } else {
         double tcheck = 0.0;

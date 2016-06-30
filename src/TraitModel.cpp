@@ -40,9 +40,8 @@ TraitModel::TraitModel(Random& random, Settings& settings) :
 #ifdef NEGATIVE_SHIFT_PARAM
     // Constrain beta shift to be zero or less than zero.
     if (_settings.getBetaShiftInit() > 0) {
-        log(Error) << "Initial value of beta shift (betaShiftInit) cannot be\n"
-            << "positive. This parameter is constrained to negative values\n";
-        std::exit(1);
+        exitWithError("Initial value of beta shift (betaShiftInit) cannot be\n" +
+               "positive. This parameter is constrained to negative values");
     }
 #endif
     
@@ -92,9 +91,7 @@ TraitModel::TraitModel(Random& random, Settings& settings) :
 
     // TODO: Code duplication with SpExModel
     if (std::isinf(getCurrentLogLikelihood())) {
-        log(Error) << "Initial log-likelihood is infinity.\n"
-            << "Please check your initial parameter values.\n";
-        std::exit(1);
+        exitWithError("Initial log-likelihood is infinity.\nPlease check your initial parameter values.");
     }
 
     log() << "\nInitial log-likelihood: " << getCurrentLogLikelihood() << "\n";

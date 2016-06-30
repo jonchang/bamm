@@ -260,8 +260,7 @@ void FastSimulatePrior::changeNumberOfEventsMH(int min, int max)
 
         _TrackingVector[_numberEvents]->incrementAddProposeCount();
         if (_numberEvents == _maxEvents - 1){
-            std::cout << " Max number of events exceeded" << std::endl;
-            exit(1);
+            exitWithError(" Max number of events exceeded");
         }
 
         if (acceptMove) {
@@ -360,8 +359,7 @@ void FastSimulatePrior::changeNumberOfEventsMH()
         acceptMove = acceptMetropolisHastings(logHR);
 
         if (_numberEvents == _maxEvents - 1){
-            std::cout << " Max number of events exceeded" << std::endl;
-            exit(1);
+            exitWithError(" Max number of events exceeded");
         }
 
         if (acceptMove) {

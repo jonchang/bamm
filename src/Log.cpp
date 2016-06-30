@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <R.h>
+
 
 Log Log::_logger;
 
@@ -78,6 +80,8 @@ void exitWithMessage(const std::string& message)
 
 void exitWithError(const std::string& message)
 {
-    log(Error) << message << std::endl;
-    std::exit(1);
+    error(message.c_str());
+    //log(Error) << message << std::endl;
+    //std::exit(1);
+
 }

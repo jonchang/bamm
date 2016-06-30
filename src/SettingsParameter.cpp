@@ -1,4 +1,5 @@
 #include "SettingsParameter.h"
+#include "Log.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -34,7 +35,6 @@ SettingsParameter& SettingsParameter::operator=(const SettingsParameter &other)
 
 void SettingsParameter::exitWithErrorWrongType() const
 {
-    std::cout << "ERROR: Parameter " << _name << " has the wrong type.\n";
-    std::cout << "Fix by assigning the parameter a value of the right type.\n";
-    std::exit(1);
+    exitWithError("ERROR: Parameter " + _name + " has the wrong type.\n" +
+                 "Fix by assigning the parameter a value of the right type.");
 }

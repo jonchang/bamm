@@ -76,9 +76,7 @@ void Model::initializeModelFromEventDataFile(const std::string& fileName)
     std::ifstream inputFile(fileName.c_str());
 
     if (!inputFile) {
-        log(Error) << "Could not read event data file "
-            << "<<" << fileName << ">>.\n";
-        std::exit(1);
+        exitWithError("Could not read event data file <<" + fileName + ">>.");
     }
 
     log() << "Initializing model from <<" << fileName << ">>...\n";
@@ -125,9 +123,7 @@ void Model::initializeModelFromEventDataFile(const std::string& fileName)
         } else if ((species_1 != "NA") && (species_2 == "NA")) {
             x = _tree->getNodeByName(species_1);
         } else {
-            log(Error) << "Either both species are NA or the second species "
-                << "is NA\nwhile reading the event data file.";
-            std::exit(1);
+            exitWithError("Either both species are NA or the second species is NA\nwhile reading the event data file.");
         }
 
         if (x == _tree->getRoot()) {
@@ -345,8 +341,7 @@ BranchEvent* Model::chooseEventAtRandom(bool includeRoot)
 BranchEvent* Model::removeEventFromTree(BranchEvent* be)
 {
     if (be ==_rootEvent) {
-        log(Error) << "Can't delete root event.\n";
-        std::exit(1);
+        exitWithError("Can't delete root event.");
     }
 
     // Erase from branch history
@@ -377,8 +372,7 @@ BranchEvent* Model::removeEventFromTree(BranchEvent* be)
     }
 
     if (!eventFound) {
-        log(Error) << "Could not find event to delete.\n";
-        std::exit(1);
+        exitWithError("Could not find event to delete.");
     }
 
     forwardSetBranchHistories(newLastEvent);
@@ -436,16 +430,11 @@ BranchEvent* Model::removeRandomEventFromTree()
 
 bool Model::isEventConfigurationValid(BranchEvent* be)
 {
-    
 #ifndef ENABLE_HASTINGS_RATIO_BUG
-    std::cout << "\n********* ERROR *********** " << std::endl;
-    std::cout << "validateEventConfiguration is no longer a valid option in BAMM" << std::endl;
-    std::cout << "\nYou will have to go to src/Model.cpp and recompile " << std::endl;
-    std::cout << "after uncommenting the ENABLE_HASTINGS_RATIO_BUG macro" << std::endl;
-    std::cout << "\n\n" << std::endl;
-    
-    exit(0);
-    
+    exitWithError("\n********* ERROR *********** \n" +
+                  "validateEventConfiguration is no longer a valid option in BAMM" +
+                  "\nYou will have to go to src/Model.cpp and recompile " +
+                  "after uncommenting the ENABLE_HASTINGS_RATIO_BUG macro\n\n");
 #endif
     
     bool isValidConfig = false;
@@ -499,8 +488,7 @@ bool Model::isEventConfigurationValid(BranchEvent* be)
         } else if (badsum < 3) {
             backwardConfigValid = true;
         } else {
-            log(Error) << "Problem in Model::isEventConfigurationValid\n";
-            std::exit(1);
+            exitWithError("Problem in Model::isEventConfigurationValid");
         }
         
         // Forward check phase: tests whether events on XX are valid
@@ -601,9 +589,8 @@ void Model::setTemperatureMH(double x)
     if ((x >= 0) && (x <= 1.0)) {
         _temperatureMH = x;
     } else {
-        log(Error) << "Attempt to set invalid temperature in "
-            << "Model::setModelTemperature: " << x << "\n";
-        std::exit(1);
+        std::string s = "Attempt to set invalid temperature in Model::setModelTemperature: ";
+        exitWithError(s += x);
     }
 }
 

@@ -50,10 +50,7 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
         // This is currently incompatible with MC3
         // so throw exception if called:
         if (_settings.get<int>("numberOfChains") != 1){
-            std::cout << "Can't use option 'random' for combineExtinctionAtNodes\n";
-            std::cout << "with Metropolis-coupled MCMC. Only single chain analysis";
-            std::cout << "\npermitted at present" << std::endl;
-            exit(0);
+            exitWithError("Can't use option 'random' for combineExtinctionAtNodes\nwith Metropolis-coupled MCMC. Only single chain analysis\npermitted at present");
         }
         
         int numNodes = _tree->getNumberOfNodes();
@@ -176,9 +173,7 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
     setCurrentLogLikelihood(computeLogLikelihood());
 
     if (std::isinf(getCurrentLogLikelihood())) {
-        log(Error) << "Initial log-likelihood is infinity.\n"
-            << "Please check your initial parameter values.\n";
-        std::exit(1);
+        exitWithError("Initial log-likelihood is infinity.\nPlease check your initial parameter values.");
     }
 
     log() << "\nInitial log-likelihood: " << getCurrentLogLikelihood() << "\n";
@@ -213,10 +208,7 @@ void SpExModel::initializeHasPaleoData()
     _numberOccurrences = _settings.get<int>("numberOccurrences");
     
     if (_numberOccurrences > 0 & _settings.get<double>("preservationRateInit") < 0.000000001){
-        std::cout << "Invalid initial settings " << std::endl;
-        std::cout << " cannot have <<numberOccurrences>> greater than 0 and " << std::endl;
-        std::cout << " <<preservationRateInit>> equal to zero. Check control file " << std::endl;
-        exit(0);
+        exitWithError("Invalid initial settings cannot have <<numberOccurrences>> greater than 0 and <<preservationRateInit>> equal to zero. Check control file");
     
     }
     
@@ -228,9 +220,7 @@ void SpExModel::initializeHasPaleoData()
         _observationTime = _tree->getAge();
         
         if (getTreePtr()->isUltrametric() == false){
-            std::cout << "Tree must be ultrametric if no fossil data" << std::endl;
-            std::cout << "Exiting...." << std::endl;
-            exit(0);
+            exitWithError("Tree must be ultrametric if no fossil data");
         }
  
         if (updateRatePreservationRate > 0.00000001){
@@ -253,8 +243,7 @@ void SpExModel::initializeHasPaleoData()
         }
         
     }else{
-        std::cout << "Invalid number of occurrences in controlfile" << std::endl;
-        exit(0);
+        exitWithError("Invalid number of occurrences in controlfile");
     }
     
 
@@ -501,17 +490,14 @@ double SpExModel::computeLogLikelihood()
                 }else if (left_shift == false & right_shift == false){
                     node->setEinit(E_left);
                 }else{
-                    std::cout << "problem in computeLogLikelihood()" << std::endl;
-                    std::cout << "Error in _combineExtinctionAtNodes option" << std::endl;
-                    exit(0);
+                    exitWithError("problem in computeLogLikelihood()\nError in _combineExtinctionAtNodes option");
                 }
             }else if (_combineExtinctionAtNodes == "left"){
                 node->setEinit(E_left);
             }else if (_combineExtinctionAtNodes == "right"){
                 node->setEinit(E_right);
-            }else{
-                std::cout << "unsupported option for combining extinction probabilities" << std::endl;
-                exit(0);
+            }else {
+                exitWithError("unsupported option for combining extinction probabilities");
             }
             
             
@@ -1054,8 +1040,7 @@ int SpExModel::nodeIndexLookup(Node* node)
         }
     }
     if (goodnode == -1){
-        std::cout << "failed to match node." << std::endl;
-        exit(0);
+        exitWithError("failed to match node.");
     }
     return goodnode;
 }

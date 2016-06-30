@@ -99,8 +99,7 @@ inline T Settings::get(const std::string& name) const
     if (it != _parameters.end()) {
         return (it->second).value<T>();
     } else {
-        log(Error) << "Parameter <<" << name << ">> does not exist.\n";
-        std::exit(1);
+        exitWithError("Parameter <<" + name + ">> does not exist.");
     }
 }
 
