@@ -6,6 +6,8 @@
 #include <cctype>
 #include <algorithm>
 #include <cstdlib>
+#include <thread>
+#include <chrono>
 
 #include "Settings.h"
 #include "Log.h"
@@ -634,7 +636,27 @@ void Settings::validateSettings(void)
         s << poisson;
         this->set("poissonRatePrior", s.str());
     }
- 
+
+    if (this->get<std::string>("combineExtinctionAtNodes") != "if_different") {
+        //               01234567890123456789012345678901234567890123456789012345678901234567890123456789
+        //               WARNING: 
+        log(LogType::Warning) << "~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~";
+        log(LogType::Warning) << "The `combineExtinctionAtNodes` parameter is for BAMM developers only!";
+        log(LogType::Warning) << "Changing this parameter WILL make your results mathematically ";
+        log(LogType::Warning) << "incoherent. You should not publish any results from this BAMM run.";
+        log(LogType::Warning) << "";
+        log(LogType::Warning) << "For more details, consult the BAMM documentation:";
+        log(LogType::Warning) << "";
+        log(LogType::Warning) << " - http://bamm-project.org/replication.html";
+        log(LogType::Warning) << "   (section \"Appendix\")";
+        log(LogType::Warning) << "";
+        log(LogType::Warning) << " - http://bamm-project.org/likelihoodmodel.html";
+        log(LogType::Warning) << "   (section \"Extinction calculations at nodes\")";
+        log(LogType::Warning) << "~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~" << std::endl << std::endl;
+        // sleep for 10 seconds so people see it
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
+
     //std::cout << "End P/E\t" << this->get("poissonRatePrior");
     //std::cout << "\t" << this->get("expectedNumberOfShifts") << std::endl;
     
