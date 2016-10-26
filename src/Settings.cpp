@@ -20,6 +20,7 @@ Settings::Settings(const std::string& controlFilename,
 {
     readControlFile(controlFilename);
 
+ 
     // Get the model type
     std::string modelType;
     std::vector<UserParameter>::const_iterator it;
@@ -34,8 +35,10 @@ Settings::Settings(const std::string& controlFilename,
  
     // Initialize specific settings for model type
     if (modelType == "speciationextinction") {
+ 	
         initializeSpeciationExtinctionSettings();
     } else if (modelType == "trait") {
+ 
         initializeTraitSettings();
     } else {
         exitWithErrorInvalidModelType();
@@ -43,12 +46,14 @@ Settings::Settings(const std::string& controlFilename,
 
     // Re-assign parameters based on user values
     initializeSettingsWithUserValues();
-
-    checkAllSettingsAreUserDefined();
-    checkAllOutputFilesAreWriteable();
-    
+	std::cout << "here?" << std::endl;
+	
+	checkAllSettingsAreUserDefined();
+	std::cout << "here2?" << std::endl;
+	checkAllOutputFilesAreWriteable();
+    std::cout << "here3?" << std::endl;
     validateSettings();
-    
+    std::cout << "here4?" << std::endl;
 }
 
 
@@ -636,27 +641,27 @@ void Settings::validateSettings(void)
         s << poisson;
         this->set("poissonRatePrior", s.str());
     }
-
-    if (this->get<std::string>("combineExtinctionAtNodes") != "if_different") {
-        //               01234567890123456789012345678901234567890123456789012345678901234567890123456789
-        //               WARNING: 
-        log(LogType::Warning) << "~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~";
-        log(LogType::Warning) << "The `combineExtinctionAtNodes` parameter is for BAMM developers only!";
-        log(LogType::Warning) << "Changing this parameter WILL make your results mathematically ";
-        log(LogType::Warning) << "incoherent. You should not publish any results from this BAMM run.";
-        log(LogType::Warning) << "";
-        log(LogType::Warning) << "For more details, consult the BAMM documentation:";
-        log(LogType::Warning) << "";
-        log(LogType::Warning) << " - http://bamm-project.org/replication.html";
-        log(LogType::Warning) << "   (section \"Appendix\")";
-        log(LogType::Warning) << "";
-        log(LogType::Warning) << " - http://bamm-project.org/likelihoodmodel.html";
-        log(LogType::Warning) << "   (section \"Extinction calculations at nodes\")";
-        log(LogType::Warning) << "~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~" << std::endl << std::endl;
-        // sleep for 10 seconds so people see it
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+	if (this->get<std::string>("modeltype") == "speciationextinction"){
+		if (this->get<std::string>("combineExtinctionAtNodes") != "if_different") {
+			//               01234567890123456789012345678901234567890123456789012345678901234567890123456789
+			//               WARNING:
+			log(LogType::Warning) << "~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~";
+			log(LogType::Warning) << "The `combineExtinctionAtNodes` parameter is for BAMM developers only!";
+			log(LogType::Warning) << "Changing this parameter WILL make your results mathematically ";
+			log(LogType::Warning) << "incoherent. You should not publish any results from this BAMM run.";
+			log(LogType::Warning) << "";
+			log(LogType::Warning) << "For more details, consult the BAMM documentation:";
+			log(LogType::Warning) << "";
+			log(LogType::Warning) << " - http://bamm-project.org/replication.html";
+			log(LogType::Warning) << "   (section \"Appendix\")";
+			log(LogType::Warning) << "";
+			log(LogType::Warning) << " - http://bamm-project.org/likelihoodmodel.html";
+			log(LogType::Warning) << "   (section \"Extinction calculations at nodes\")";
+			log(LogType::Warning) << "~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~" << std::endl << std::endl;
+			// sleep for 10 seconds so people see it
+			std::this_thread::sleep_for(std::chrono::seconds(10));
     }
-
+	}
     //std::cout << "End P/E\t" << this->get("poissonRatePrior");
     //std::cout << "\t" << this->get("expectedNumberOfShifts") << std::endl;
     
