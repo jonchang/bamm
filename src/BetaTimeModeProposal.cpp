@@ -58,7 +58,8 @@ void BetaTimeModeProposal::setEventParameters(BranchEvent* event,
 
 void BetaTimeModeProposal::setModelParameters()
 {
-    std::cout << "DEBUG / in beta time mode proposal" << std::endl;
+    //std::cout << "DEBUG / in beta time mode proposal" << std::endl;
+
     _tree->setMeanBranchTraitRates();
 }
 

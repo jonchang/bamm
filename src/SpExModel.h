@@ -14,7 +14,7 @@ class Settings;
 class BranchEvent;
 class Proposal;
 class SpExBranchEvent;
-
+class Fossil;
 
 class SpExModel : public Model
 {
@@ -37,10 +37,10 @@ public:
     double getPreservationRate();
     void setPreservationRate(double x);
     
-    bool   getHasPaleoData();
-    void   setHasPaleoData(bool x);
+    //bool   getHasPaleoData();
+    //void   setHasPaleoData(bool x);
     
-    void   initializeHasPaleoData();
+    //void   initializeHasPaleoData();
     
     // Debugging likelihood function:
     void   printNodeProbs();
@@ -108,16 +108,18 @@ private:
     // Fossil preservation rate. Assume 1 value for now.
     double _preservationRate;
     // Time at which tree is observed, relative to root
-    double _observationTime;
+    //double _observationTime;
     
     // this will change at some point
     //   to allow greater flexibility of preservation model
-    int     _numberOccurrences;
-    bool   _hasPaleoData;
+    //int     _numberOccurrences;
+    //bool   _hasPaleoData;
     
     bool   _conditionOnSurvival;
     
     double _tmpvar;
+    
+    Fossil* _fossil;
     
     // October 2015 fixes
     bool _lambdaIsTimeVariable;
@@ -161,7 +163,7 @@ inline void SpExModel::setPreservationRate(double x)
     _preservationRate = x;
 }
 
-
+/*
 inline bool SpExModel::getHasPaleoData()
 {
     return _hasPaleoData;
@@ -172,7 +174,7 @@ inline void SpExModel::setHasPaleoData(bool x)
 {
     _hasPaleoData = x;
 }
-
+*/
 
 
 #endif

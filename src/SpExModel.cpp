@@ -19,13 +19,18 @@
 #include "Log.h"
 #include "Prior.h"
 #include "Tools.h"
+#include "Fossil.h"
 
 #include <cstdlib>
 #include <cmath>
 #include <vector>
 #include <string>
 #include <fstream>
-   
+
+// if undefined,
+//  will run (slightly) faster as will not use
+//  fossil class
+#define ENABLE_FOSSIL
 
 #define JUMP_VARIANCE_NORMAL 0.05
 
@@ -34,7 +39,7 @@
 
 
 SpExModel::SpExModel(Random& random, Settings& settings) :
-    Model(random, settings)
+    Model(random, settings), _fossil(new Fossil(settings, *_tree))
 {
     // Initial values
     _lambdaInit0 = _settings.get<double>("lambdaInit0");
@@ -80,24 +85,24 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
     }
     // End block for "random" _combineExtinctionAtNodes
     
-    // CHECK for paleontological data
-    _hasPaleoData = false;
-    
-    initializeHasPaleoData();
-    
     int cs = _settings.get<int>("conditionOnSurvival");
-    if (cs == -1){
-        if (_hasPaleoData){
-            _conditionOnSurvival = false;
-        }else{
-            _conditionOnSurvival = true;
-        }
-    }else if (cs == 0){
+    
+    std::string fossil_pres_model = _settings.get<std::string>("preservationModel");
+    
+    if (fossil_pres_model  != "NONE"){
+        
+        // This assumes that all trees with paleo data should NOT
+        // be conditioned on survival.
+        _conditionOnSurvival = false;
+        
+    }
+    
+    if (cs == 0){
         _conditionOnSurvival = false;
     }else if (cs == 1){
         _conditionOnSurvival = true;
     }else{
-        exitWithError("Invalid initial value for parameter <<conditionOnSurvivial>>");
+        exitWithError("Invalid initial value for parameter <<conditionOnSurvival>>");
     }
 
     // Initialize fossil preservation rate:
@@ -208,7 +213,8 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
     _proposals.push_back(new MuShiftProposal(random, settings, *this, _prior));
     _proposals.push_back(new LambdaTimeModeProposal(random, settings, *this));
 
-    if (_hasPaleoData){
+    //if (_settings.get<std::string>>("preservationModel") != "NONE"){
+    if (fossil_pres_model != "NONE"){
         // Cannot set this parameter unless you have paleo data....
         _proposals.push_back(new PreservationRateProposal(random, settings, *this, _prior));
     }
@@ -217,63 +223,6 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
     Model::calculateUpdateWeights();
 
 }
-
-
-// Evalates settings and tree to determine if
-// it is a valid instance of a tree with some paleontological data.
-// Sets the _hasPaleoData parameter.
-void SpExModel::initializeHasPaleoData()
-{
-    _numberOccurrences = _settings.get<int>("numberOccurrences");
-    
-    if (_numberOccurrences > 0 & _settings.get<double>("preservationRateInit") < 0.000000001){
-        std::cout << "Invalid initial settings " << std::endl;
-        std::cout << " cannot have <<numberOccurrences>> greater than 0 and " << std::endl;
-        std::cout << " <<preservationRateInit>> equal to zero. Check control file " << std::endl;
-        exit(0);
-    
-    }
-    
-    double updateRatePreservationRate = _settings.get<double>("updateRatePreservationRate");
-    
-    
-    if (_numberOccurrences == 0){
-        _hasPaleoData = false;
-        _observationTime = _tree->getAge();
-        
-        if (getTreePtr()->isUltrametric() == false){
-            std::cout << "Tree must be ultrametric if no fossil data" << std::endl;
-            std::cout << "Exiting...." << std::endl;
-            exit(0);
-        }
- 
-        if (updateRatePreservationRate > 0.00000001){
-            std::cout << "Attempt to set preservation rate for non-paleo data" << std::endl;
-            std::cout << "This parameter will be ignored..." << std::endl;
-        }
-        
-    }else if (_numberOccurrences > 0){
-        
-        _hasPaleoData = true;
-        
-        // Observation time of tree:
-        _observationTime = _settings.get<double>("observationTime");
-        if (_observationTime <= 0){
-            _observationTime = _tree->getAge();
-        }else if ( _observationTime < _tree->getAge() ){
-            std::cout << "WARNING: invalid initial observation time" << std::endl;
-            std::cout << "\t... setting observationTime to tree MAX TIME" << std::endl;
-            _observationTime = _tree->getAge();
-        }
-        
-    }else{
-        std::cout << "Invalid number of occurrences in controlfile" << std::endl;
-        exit(0);
-    }
-    
-
-}
-
 
 void SpExModel::setRootEventWithReadParameters
     (const std::vector<std::string>& parameters)
@@ -613,18 +562,14 @@ double SpExModel::computeLogLikelihood()
     }
 
     
-    if (_hasPaleoData){
-        logLikelihood += computePreservationLogProb();  
-    }
+#ifdef ENABLE_FOSSIL
     
-    // std::cout << "Current logLik in SpExModel::computeLogLikelihood: " << logLikelihood << std::endl;
-    //std::cout << "Check model in SpExModel::computeLogLikelihood" << std::endl;
-    //checkModel();
-    //std::cout << "mchecked in SpExModel...." << std::endl;
-    //std::cout << "computed from stored: " << computeFromStored << std::endl;
- 
-    return (_likelihoodPower * logLikelihood);
+    logLikelihood += _fossil->computeOccurrenceLogLikelihood(_preservationRate);
     
+#endif
+    
+    
+    return logLikelihood;
 }
 
 
@@ -664,7 +609,9 @@ double SpExModel::computeSpExProbBranch(Node* node)
     
     bool recompute_E0 = false;
 
- 
+    // The event governing tipwards end of branch:
+    SpExBranchEvent* be = static_cast<SpExBranchEvent*>(node->getBranchHistory()->getLastEvent(node->getTime()));
+    double observation_time = _fossil->getObservationTime();
     
     // 3 scenarios:
     //   i. node is extant tip
@@ -682,34 +629,42 @@ double SpExModel::computeSpExProbBranch(Node* node)
     //      Problems were observed with simulated trees when the tolerance parameter
     //      was set to 0.00001, as it was flagging many extant taxa as extinct.
     
-    bool isExtant = (std::abs(node->getTime() - _observationTime)) < 0.01;
+    bool isExtant = (std::abs(node->getTime() - observation_time)) < 0.01;
     
-    if (node->isInternal() == false & isExtant == false){
     // case 1: node is fossil tip
-    
-        double ddt = _observationTime - node->getTime();
+    if (node->isInternal() == false & isExtant == false){
         
-        double startTime = node->getBrlen() + ddt;
-        double endTime = startTime;
+        // Get speciation extinction parameters for governing event
+        double lam_init = be->getLamInit();
+        double lam_shift = be->getLamShift();
+        double mu_init  = be->getMuInit();
+        double mu_shift = be->getMuShift();
         
-        while (startTime > node->getBrlen()){
-            startTime -= _segLength;
-            if (startTime < node->getBrlen() ){
-                startTime = node->getBrlen();
+        double event_abs_time = be->getAbsoluteTime();
+        
+        double interval_start_time = observation_time - event_abs_time;
+        double interval_stop_time = interval_start_time;
+        double tip_time_from_process = node->getTime() - event_abs_time;
+        
+        while ( interval_start_time > tip_time_from_process ){
+            interval_start_time -= _segLength;
+            if (interval_start_time < tip_time_from_process ){
+                interval_start_time = tip_time_from_process;
             }
-            double deltaT = endTime - startTime;
             
-            double curLam = node->computeSpeciationRateIntervalRelativeTime
-            (startTime, endTime);
+            double curLam = computeMeanExponentialRateForInterval
+            (lam_init, lam_shift, interval_start_time, interval_stop_time);
             
-            double curMu = node->computeExtinctionRateIntervalRelativeTime
-            (startTime, endTime);
+            double curMu  = computeMeanExponentialRateForInterval
+            (mu_init, mu_shift, interval_start_time, interval_stop_time);
             
-            double curPsi = _preservationRate;
+            double abs_time = interval_start_time + event_abs_time;
+            double curPsi = _fossil->getCurrentPreservationRate(node, abs_time, _preservationRate);
             
             double spProb = 0.0;
             double exProb = 0.0;
-        
+            double deltaT = interval_stop_time - interval_start_time;
+            
             computeSpExProb(spProb, exProb, curLam, curMu, curPsi, D0, E0, deltaT);
             
             if (exProb > _extinctionProbMax ){
@@ -719,7 +674,7 @@ double SpExModel::computeSpExProbBranch(Node* node)
             
             E0 = exProb;
             
-            endTime = startTime;
+            interval_stop_time = interval_start_time;
             
         }
         
@@ -741,7 +696,7 @@ double SpExModel::computeSpExProbBranch(Node* node)
     double startTime = node->getBrlen();
     double endTime = node->getBrlen();
  
-    SpExBranchEvent* be = static_cast<SpExBranchEvent*>(node->getBranchHistory()->getLastEvent(node->getTime()));
+    //SpExBranchEvent* be = static_cast<SpExBranchEvent*>(node->getBranchHistory()->getLastEvent(node->getTime()));
  
     while (startTime > 0) {
         startTime -= _segLength;
@@ -793,7 +748,16 @@ double SpExModel::computeSpExProbBranch(Node* node)
         double curLam = computeMeanExponentialRateForInterval(lam_init, lam_shift, event_t_start, event_t_end);
         double curMu  = computeMeanExponentialRateForInterval(mu_init, mu_shift, event_t_start, event_t_end);
         
-        double curPsi = _preservationRate;
+#ifdef ENABLE_FOSSIL
+        
+        double curPsi = _fossil->getCurrentPreservationRate(node, abs_start_time, _preservationRate);
+        
+#else
+        
+        double curPsi = 0.0;
+        
+#endif
+        
         double spProb = 0.0;
         double exProb = 0.0;
         
@@ -855,7 +819,7 @@ double SpExModel::computeSpExProbBranch(Node* node)
             double start_rel_to_process = abs_start_time - be->getAbsoluteTime();
             
             // end time relative to age of current process
-            double end_rel_to_process = _observationTime - be->getAbsoluteTime();
+            double end_rel_to_process = observation_time - be->getAbsoluteTime();
             
             E0 = recomputeE0(start_rel_to_process, end_rel_to_process, lam_init, lam_shift,
                                             mu_init, mu_shift, E0);
@@ -1127,9 +1091,15 @@ double SpExModel::computeLogPrior()
     logPrior += _prior.poissonRatePrior(_eventRate);
  
     // Prior density on the preservation rate, if paleo data:
-    if (_hasPaleoData){
+    // TODO: ultimately move this to class Fossil to allow more complex
+    //       preservation scenarios?
+#ifdef ENABLE_FOSSIL
+    
+    if (_settings.get<std::string>("preservationModel") != "NONE"){
         logPrior += _prior.preservationRatePrior(_preservationRate);
     }
+    
+#endif
  
     //std::cout << "N_events: " << _eventCollection.size() << "\tlogPrior: " << logPrior << std::endl;
     
@@ -1137,13 +1107,16 @@ double SpExModel::computeLogPrior()
     return logPrior;
 }
 
-
+// TODO: remove this function entirely;
+// redundant with class Fossil.
+/*
 double SpExModel::computePreservationLogProb()
 {
     double logLik = (double)_numberOccurrences * std::log(_preservationRate);
 
     return logLik;
 }
+*/
 
 /************************/
 // DEBUG FUNCTIONS BELOW

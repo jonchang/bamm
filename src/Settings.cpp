@@ -181,6 +181,8 @@ void Settings::initializeGlobalSettings()
     // TODO: this should NOT be a global set of parameters.
     // But it will not run trait BAMM unless they are set here.
     // Problem is with
+    addParameter("preservationModel", "NONE", NotRequired);
+    addParameter("fossilDataFile", "", NotRequired);
     
     addParameter("preservationRateInit", "0", NotRequired);
     addParameter("observationTime", "-1", NotRequired);
@@ -250,7 +252,7 @@ void Settings::initializeSpeciationExtinctionSettings()
     // to avoid numerical overflow issues (especially rounding to 1)
     addParameter("extinctionProbMax", "0.9999", NotRequired);
     
-    addParameter("conditionOnSurvival", "-1", NotRequired);
+    addParameter("conditionOnSurvival", "1", NotRequired);
     addParameter("alwaysRecomputeE0", "0", NotRequired);
     
     addParameter("combineExtinctionAtNodes", "if_different", NotRequired);

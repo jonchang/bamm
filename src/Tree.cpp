@@ -1463,9 +1463,10 @@ void Tree::initializeSpeciationExtinctionModel(std::string fname)
 {
     
     // Tree must be ultrametric to use this option
-    // TODO: this check for ultrametric must be more informative
+    // TODO: complete exploration of pathologies that may result from
+    // disabling the ultrametric check
     
-    assertTreeIsUltrametric();
+    //assertTreeIsUltrametric();
     
     std::ifstream infile(fname.c_str());
 
