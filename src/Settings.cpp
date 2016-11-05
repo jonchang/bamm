@@ -253,8 +253,7 @@ void Settings::initializeSpeciationExtinctionSettings()
     addParameter("extinctionProbMax", "0.9999", NotRequired);
     
     addParameter("conditionOnSurvival", "1", NotRequired);
-    addParameter("alwaysRecomputeE0", "0", NotRequired);
-    
+
     addParameter("combineExtinctionAtNodes", "if_different", NotRequired);
     
     
@@ -661,7 +660,7 @@ void Settings::validateSettings(void)
 			log(LogType::Warning) << "   (section \"Extinction calculations at nodes\")";
 			log(LogType::Warning) << "~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~WARNING~~~~~~~~~~~~" << std::endl << std::endl;
 			// sleep for 10 seconds so people see it
-			std::this_thread::sleep_for(std::chrono::seconds(10));
+			std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 	}
     //std::cout << "End P/E\t" << this->get("poissonRatePrior");

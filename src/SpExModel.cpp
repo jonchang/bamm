@@ -52,9 +52,9 @@ SpExModel::SpExModel(Random& random, Settings& settings) :
         std::cout << "Initial value must be greater than zero if updateRateMu0 > 0" << std::endl;
         exit(0);
     }
-    
-    
-    _alwaysRecomputeE0 = _settings.get<bool>("alwaysRecomputeE0");
+	
+	
+	_alwaysRecomputeE0 = _settings.get<std::string>("combineExtinctionAtNodes") == "recompute";
     
     
     _combineExtinctionAtNodes = _settings.get<std::string>("combineExtinctionAtNodes");
@@ -431,15 +431,14 @@ double SpExModel::computeLogLikelihood()
         Node* node = postOrderNodes[i];
         node->setHasDownstreamRateShift(false);
     }    
-
-    double computeFromStored = 0.0;
+ 
     
-    
-#ifdef EARLY_REJECT
-    double previousLikelihood = 0.0;
+// TODO: cleanup EARLY_REJECT / delete this (why was this here?)
+// #ifdef EARLY_REJECT
+//  double previousLikelihood = 0.0;
 //    double bterm = 0.0;
 //    double nterm = 0.0;
-#endif
+// #endif
     
     for (int i = 0; i < numNodes; i++) {
         Node* node = postOrderNodes[i];
@@ -449,18 +448,13 @@ double SpExModel::computeLogLikelihood()
             double LL = computeSpExProbBranch(node->getLfDesc());
             double LR = computeSpExProbBranch(node->getRtDesc());
 
-#ifdef EARLY_REJECT
-            previousLikelihood += node->getLfDesc()->getLogDiCurrent();
-            previousLikelihood += node->getRtDesc()->getLogDiCurrent();
-            
-#endif
-            
-            computeFromStored += LL + LR;
-            
-            
+// TODO: cleanup EARLY_REJECT / delete this
+//#ifdef EARLY_REJECT
+//            previousLikelihood += node->getLfDesc()->getLogDiCurrent();
+//            previousLikelihood += node->getRtDesc()->getLogDiCurrent();
+//#endif
  
-#ifdef NEVER_RECOMPUTE_E0
-            
+   
 
 #ifdef USE_FAST
             double E_left = node->getLfDesc()->getExProbProposed();
@@ -469,26 +463,18 @@ double SpExModel::computeLogLikelihood()
             double E_left = node->getLfDesc()->getExtinctionEnd();
             double E_right = node->getRtDesc()->getExtinctionEnd();
 #endif
-            
-
-            
-            
-            
+ 
             bool left_shift = node->getLfDesc()->getHasDownstreamRateShift();
             bool right_shift = node->getRtDesc()->getHasDownstreamRateShift();
-            
-            
-            // random: favor extinction probs of right or left branch
-            //   based on pre-determined inheritance sequence
-            //   Avoids conditioning on tree shape, but conditions
-            //   on observed set of distinct processes.
-            
-            // if_different is (probably) the theoretically justified option
-            // and is now the default in BAMM
-            //  but the other options are included for comparison,
-            //  as this is not straightforward.
-            
-            if (_combineExtinctionAtNodes == "random"){
+ 
+			if ( _alwaysRecomputeE0 ){
+				
+				// Under recompute, values from right and left descendant branches are identical at this point
+				//    so can arbitrarily choose the left
+				
+				node->setEinit(E_left);
+				
+			} else if (_combineExtinctionAtNodes == "random"){
                 
                 if (node->getInheritFromLeft() == true){
                     node->setEinit(E_left);
@@ -509,7 +495,7 @@ double SpExModel::computeLogLikelihood()
                     node->setEinit(E_left);
                 }
                 
-            }else if (_combineExtinctionAtNodes == "favor_shift"){
+			} else if (_combineExtinctionAtNodes == "favor_shift"){
                 if (left_shift == true & right_shift == true){
                     node->setEinit( E_left * E_right );
                 }else if (left_shift == true & right_shift == false){
@@ -531,11 +517,7 @@ double SpExModel::computeLogLikelihood()
                 std::cout << "unsupported option for combining extinction probabilities" << std::endl;
                 exit(0);
             }
-            
-            
-#endif
-            
-            
+			
             
             logLikelihood += (LL + LR);
 
@@ -544,19 +526,17 @@ double SpExModel::computeLogLikelihood()
             // on basal speciation event occurring:
             if (node != _tree->getRoot()) {
                 logLikelihood  += log(node->getNodeLambda());
-
-                computeFromStored += std::log(node->getNodeLambda());
                 
                 node->setDinit(1.0);
-            
-#ifdef EARLY_REJECT
-                
-                previousLikelihood += log(node->getPreviousNodeLambda());
-                
-                if (logLikelihood < (previousLikelihood - (double)5.0) && std::fabs(LL) > 0.00001){
-                     return -INFINITY;
-                }
-#endif
+				
+// TODO: clean up  / remove this
+//#ifdef EARLY_REJECT
+//                previousLikelihood += log(node->getPreviousNodeLambda());
+//                if (logLikelihood < (previousLikelihood - (double)5.0) && std::fabs(LL) > 0.00001){
+//                     return -INFINITY;
+//                }
+//#endif
+				
             }
         }
     }
@@ -586,11 +566,6 @@ double SpExModel::computeSpExProbBranch(Node* node)
  
 #endif
  
-    //std::cout << node << "\tComputeSpExpProbBranch LogL prop init\t" << node->getLogDiProposed() << "\tCurr ";
-    //std::cout << node->getLogDiCurrent() << std::endl;
-    
-    
-    
     int n_events = node->getBranchHistory()->getNumberOfBranchEvents();
     
     if (n_events > 0){
@@ -607,7 +582,7 @@ double SpExModel::computeSpExProbBranch(Node* node)
     double D0 = node->getDinit();    // Initial speciation probability
     double E0 = node->getEinit();    // Initial extinction probability
     
-    bool recompute_E0 = false;
+    bool local_recompute_E0 = false;
 
     // The event governing tipwards end of branch:
     SpExBranchEvent* be = static_cast<SpExBranchEvent*>(node->getBranchHistory()->getLastEvent(node->getTime()));
@@ -725,12 +700,10 @@ double SpExModel::computeSpExProbBranch(Node* node)
             abs_start_time = node->getAnc()->getTime() + startTime;
             be = static_cast<SpExBranchEvent*>(node->getBranchHistory()->getLastEvent(be));
             
-            // set flag to recompute_E0 if you switch to new process.
-            // this will ONLY be used if the NEVER_RECOMPUTE_E0 macro is undefined
-            // (it should always be defined except for testing the effects
-            // of recomputing)
+            // set local_recompute_E0 if you switch to new process.
+			// which will only be used if combineExtinctionAtNodes = recompute
             
-            recompute_E0 = true;
+            local_recompute_E0 = true;
             
         }
   
@@ -765,11 +738,7 @@ double SpExModel::computeSpExProbBranch(Node* node)
         // Compute speciation and extinction probabilities and store them
         // in spProb and exProb (through reference passing)
         computeSpExProb(spProb, exProb, curLam, curMu, curPsi, D0, E0, deltaT);
-        
-        //std::cout << node << "dt\t" << deltaT << "\t" << curLam << "\t" << std::log(spProb) << std::endl;
  
-        
-        
         if (exProb > _extinctionProbMax ){
         
             return -INFINITY;
@@ -778,106 +747,107 @@ double SpExModel::computeSpExProbBranch(Node* node)
         logLikelihood += std::log(spProb);
         
         D0 = 1.0;
-        
-#ifdef NEVER_RECOMPUTE_E0
-     
-        // Here we always use the existing E0 for next calculation
-        //    but do not recompute.
-        
-        E0 = exProb;
-        
-#else
-        // RECOMPUTE. This is included for comparative purposes,
-        // but is theoretically invalid.
-        
-        if (!recompute_E0 & (! _alwaysRecomputeE0)){
-            E0 = exProb;
-        }else{
- 
-            recompute_E0 = false;
-            // Get parameters for next process.
-            // SpExBranchEvent* be is now toggled to parent process
-            // Get speciation extinction parameters for governing event
-                
-            double lam_init = be->getLamInit();
-            double lam_shift = be->getLamShift();
-            double mu_init  = be->getMuInit();
-            double mu_shift = be->getMuShift();
-            
-            
-            // The interval of computation should be defined in terms of
-            // start_time relative to start time of process,
-            // and end_time relative to age of process.
-            // NOTE however that we are dealing now with the next upstream process
-            // not the process just used to compute D(t).
-            // Because only get here if changing process, the difference in age of the
-            // last process and next process is the relevant start time.
-            
-            E0 = node->getEtip();
-            
-            // get current time relative to age of process:
-            double start_rel_to_process = abs_start_time - be->getAbsoluteTime();
-            
-            // end time relative to age of current process
-            double end_rel_to_process = observation_time - be->getAbsoluteTime();
-            
-            E0 = recomputeE0(start_rel_to_process, end_rel_to_process, lam_init, lam_shift,
-                                            mu_init, mu_shift, E0);
-            
-          
-        }
-        
-#endif
-        
+		
+		if (! _alwaysRecomputeE0 ){
+			
+			// Here we always use the existing E0 for next calculation
+			//    but do not recompute.
+			E0 = exProb;
+		
+		}else{
+			
+			if ( ! local_recompute_E0 ){
+				// There is no event on interval, so E0 is the value at the
+				//    end of the previous segment
+				E0 = exProb;
+			
+			}else{
+				// otherwise, we have to recompute E0 for the focal interval
+				// going all the way forward to the present (or observation time)
+			
+				local_recompute_E0 = false;
+				
+				
+				// Get parameters for next process.
+				// SpExBranchEvent* be is now toggled to parent process
+				// Get speciation extinction parameters for governing event
+				
+				double lam_init = be->getLamInit();
+				double lam_shift = be->getLamShift();
+				double mu_init  = be->getMuInit();
+				double mu_shift = be->getMuShift();
+				
+				
+				// The interval of computation should be defined in terms of
+				// start_time relative to start time of process,
+				// and end_time relative to age of process.
+				// NOTE however that we are dealing now with the next upstream process
+				// not the process just used to compute D(t).
+				// Because only get here if changing process, the difference in age of the
+				// last process and next process is the relevant start time.
+				
+				E0 = node->getEtip();
+				
+				// get current time relative to age of process:
+				double start_rel_to_process = abs_start_time - be->getAbsoluteTime();
+				
+				// end time relative to age of current process
+				double end_rel_to_process = observation_time - be->getAbsoluteTime();
+				
+				E0 = recomputeE0(start_rel_to_process, end_rel_to_process, lam_init, lam_shift,
+								 mu_init, mu_shift, E0);
+				
+				
+			}
+			
+			
+		}
+
         endTime = startTime;
 
     
     
-    }
+    } // while (startTime > 0)
     
     
     Node * parent = node->getAnc();
-
-
-#ifdef NEVER_RECOMPUTE_E0
-    
+	
+// Addition 2016-11-05
+// *should* work for recompute and non-recompute cases
+	node->setExtinctionEnd(E0);
+	
+	
+	
+// 2016-11-05
+// Previous code:
+//#ifdef NEVER_RECOMPUTE_E0
     // set extinction end value for branch for current node.
-    
-    node->setExtinctionEnd(E0);
+//    node->setExtinctionEnd(E0);
     
     // but do not set parent -- this will happen in the calling function
     // when right and left descendants are computed.
-    
-#else
-    
-    Node * parent = node->getAnc();
-    
+// #else
+//    Node * parent = node->getAnc();
     // Should be exactly equal coming from right or left descendant branch at this point.
-    parent->setEinit(E0);
+//    parent->setEinit(E0);
 
-#endif
-  
+//#endif
     
     if (parent == _tree->getRoot() & _conditionOnSurvival == true){
  
          logLikelihood -= std::log(1.0 - E0);
     }
- 
-    //std::cout << node->getNodeParamsAreCurrent() << "\t" << node->getLogDiEnd() << "\t" << logLikelihood << std::endl;
-    
+	
 #ifdef USE_FAST
     
     node->setLogDiProposed(logLikelihood);
     node->setExProbProposed(E0);
  
-    //std::cout << node << "\tLogL prop\t" << node->getLogDiProposed() << "\tCurr " << node->getLogDiCurrent();
-    //std::cout << "\tlval: " << logLikelihood << std::endl;
-    
+ 
     
 #endif
     
-    //std::cout << "in SpeXModel::COmputeLikelihoood() Node: " << node << "\t" << logLikelihood << std::endl;
-    
+ 
     return logLikelihood;
 }
 
@@ -935,6 +905,7 @@ double SpExModel::recomputeE0(double start_time, double end_time, double lam_ini
         end_time  = decrementer;
         
         E0 = eprob;
+		
         // E0 cannot exceed max probability of extinction
         //   necessary to avoid overflow/underflow issues
         //   as E0 approaches 1.0
@@ -1331,10 +1302,11 @@ void SpExModel::revertLikelihoodNodeParams()
         node->setLogDiCurrent(node->getLogDiProposed());
         node->setExProbCurrent(node->getExProbProposed());
         node->setProposedUpdate(false);
-        
-#ifdef EARLY_REJECT
-        node->setPreviousNodeLambda(node->getNodeLambda());
-#endif
+		
+// TODO: remove
+// #ifdef EARLY_REJECT
+//         node->setPreviousNodeLambda(node->getNodeLambda());
+// #endif
  
     }
 
