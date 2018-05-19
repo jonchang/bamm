@@ -34,7 +34,6 @@
 
 #define JUMP_VARIANCE_NORMAL 0.05
 
-#define NEVER_RECOMPUTE_E0
 
 
 
@@ -816,25 +815,7 @@ double SpExModel::computeSpExProbBranch(Node* node)
 // *should* work for recompute and non-recompute cases
 	node->setExtinctionEnd(E0);
 	
-	
-	
-// 2016-11-05
-// Previous code:
-//#ifdef NEVER_RECOMPUTE_E0
-    // set extinction end value for branch for current node.
-//    node->setExtinctionEnd(E0);
-    
-    // but do not set parent -- this will happen in the calling function
-    // when right and left descendants are computed.
-// #else
-//    Node * parent = node->getAnc();
-    // Should be exactly equal coming from right or left descendant branch at this point.
-//    parent->setEinit(E0);
-
-//#endif
-    
     if (parent == _tree->getRoot() & _conditionOnSurvival == true){
- 
          logLikelihood -= std::log(1.0 - E0);
     }
 	
