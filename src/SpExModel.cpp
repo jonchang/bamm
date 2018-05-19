@@ -432,13 +432,6 @@ double SpExModel::computeLogLikelihood()
     }    
  
     
-// TODO: cleanup EARLY_REJECT / delete this (why was this here?)
-// #ifdef EARLY_REJECT
-//  double previousLikelihood = 0.0;
-//    double bterm = 0.0;
-//    double nterm = 0.0;
-// #endif
-    
     for (int i = 0; i < numNodes; i++) {
         Node* node = postOrderNodes[i];
         
@@ -446,14 +439,6 @@ double SpExModel::computeLogLikelihood()
  
             double LL = computeSpExProbBranch(node->getLfDesc());
             double LR = computeSpExProbBranch(node->getRtDesc());
-
-// TODO: cleanup EARLY_REJECT / delete this
-//#ifdef EARLY_REJECT
-//            previousLikelihood += node->getLfDesc()->getLogDiCurrent();
-//            previousLikelihood += node->getRtDesc()->getLogDiCurrent();
-//#endif
- 
-   
 
 #ifdef USE_FAST
             double E_left = node->getLfDesc()->getExProbProposed();
@@ -525,17 +510,7 @@ double SpExModel::computeLogLikelihood()
             // on basal speciation event occurring:
             if (node != _tree->getRoot()) {
                 logLikelihood  += log(node->getNodeLambda());
-                
                 node->setDinit(1.0);
-				
-// TODO: clean up  / remove this
-//#ifdef EARLY_REJECT
-//                previousLikelihood += log(node->getPreviousNodeLambda());
-//                if (logLikelihood < (previousLikelihood - (double)5.0) && std::fabs(LL) > 0.00001){
-//                     return -INFINITY;
-//                }
-//#endif
-				
             }
         }
     }
@@ -1283,12 +1258,6 @@ void SpExModel::revertLikelihoodNodeParams()
         node->setLogDiCurrent(node->getLogDiProposed());
         node->setExProbCurrent(node->getExProbProposed());
         node->setProposedUpdate(false);
-		
-// TODO: remove
-// #ifdef EARLY_REJECT
-//         node->setPreviousNodeLambda(node->getNodeLambda());
-// #endif
- 
     }
 
 }

@@ -3,8 +3,4 @@
 #endif
 
 
-#ifndef EARLY_REJECT
-//#define EARLY_REJECT
-#endif
-
 
